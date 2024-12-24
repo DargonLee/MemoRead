@@ -11,7 +11,7 @@ import SwiftUI
 struct MemoReadApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            HomeView()
         }
     }
 }
