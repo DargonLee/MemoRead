@@ -6,8 +6,13 @@
 //
 
 import Foundation
+import SwiftUI
 import SwiftData
+#if os(iOS)
 import UIKit
+#else
+import AppKit
+#endif
 
 @Model
 final class ReadingCardModel {
@@ -59,8 +64,16 @@ final class ReadingCardModel {
         ]
         
         // 创建示例图片卡片
-        guard let image = UIImage(named: "sampleImage"),
-              let imageModel = ReadingCardModel.createFromImage(image) else {
+        let image: PlatformImage? = {
+#if os(iOS)
+            return UIImage(named: "sampleImage")
+#elseif os(macOS)
+            return NSImage(named: "sampleImage")
+#endif
+        }()
+        
+        guard let platformImage = image,
+              let imageModel = ReadingCardModel.createFromImage(platformImage) else {
             return samples
         }
         samples.append(imageModel)
@@ -69,18 +82,28 @@ final class ReadingCardModel {
 }
 
 extension ReadingCardModel {
-    var image: UIImage? {
+    var image: Image? {
+#if os(iOS)
         guard type == ReadingCardType.image.rawValue,
-            let data = Data(base64Encoded: content),
-            let image = UIImage(data: data)
-        else {
+              let data = Data(base64Encoded: content),
+              let imageData = UIImage(data: data) else {
             return nil
         }
+        return Image(uiImage: imageData)
+#elseif os(macOS)
+        guard type == ReadingCardType.image.rawValue,
+              let data = Data(base64Encoded: content),
+              let imageData = NSImage(data: data),
+              let cgImage = imageData.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            return nil
+        }
+        let image = Image(decorative: cgImage, scale: 1.0)
         return image
+#endif
     }
-
-    static func createFromImage(_ image: UIImage) -> ReadingCardModel? {
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+    
+    static func createFromImage(_ image: PlatformImage) -> ReadingCardModel? {
+        guard let imageData = image.compressedData(compressionQuality: 0.8) else {
             return nil
         }
         let base64String = imageData.base64EncodedString()

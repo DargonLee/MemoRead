@@ -32,7 +32,7 @@ private struct ContentImageView: View {
 
     var body: some View {
         if let image = item.image {
-            Image(uiImage: image)
+            image
                 .resizable()
                 .scaledToFit()
                 .cornerRadius(8)
@@ -55,11 +55,15 @@ private struct ContentImageView: View {
 
 private struct ContentTextView: View {
     let content: String
-
+    
     var body: some View {
         Text(content)
             .font(.body)
+#if os(iOS)
             .lineLimit(3)
+#elseif os(macOS)
+            .lineLimit(5)
+#endif
             .multilineTextAlignment(.leading)
             .lineSpacing(6)
             .padding(.vertical, 4)
@@ -74,7 +78,11 @@ private struct ContentLinkView: View {
         let url = URL(string: content)!
         return Link(destination: url) {
             Text(url.absoluteString)
-                .lineLimit(3)
+#if os(iOS)
+            .lineLimit(3)
+#elseif os(macOS)
+            .lineLimit(5)
+#endif
         }
     }
 }

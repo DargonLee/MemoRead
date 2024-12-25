@@ -15,13 +15,7 @@ import OSLog
 
 extension String {
     func copyToClipboard() {
-        #if os(iOS)
-        UIPasteboard.general.string = self
-        #elseif os(macOS)
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(self, forType: .string)
-        #endif
-
+        Clipboard.shared.setString(self)
         #if DEBUG
         Logger.main.debug("Copied to clipboard: \(self)")
         #endif
@@ -32,7 +26,11 @@ extension String {
         guard let url = URL(string: self) else {
             return false
         }
+#if os(iOS)
         return UIApplication.shared.canOpenURL(url)
+#elseif os(macOS)
+        return NSWorkspace.shared.open(url)
+#endif
     }
     
     // Check if a string is a valid image base64 encoded data
