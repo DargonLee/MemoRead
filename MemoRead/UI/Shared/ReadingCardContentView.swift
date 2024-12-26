@@ -24,6 +24,12 @@ struct ReadingCardContentView: View {
                     "暂无内容", image: "doc.text.magnifyingglass", description: Text("暂无内容"))
             }
         }
+#if os(macOS)
+        .contextMenu {
+            Button("删除") { }
+            Button("复制") { }
+        }
+#endif
     }
 }
 

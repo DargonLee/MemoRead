@@ -25,6 +25,7 @@ final class ReadingCardModel {
     var createdAt: Date
     var notificationAt: Date?
     var completedAt: Date?
+    var reminderAt: Date?
 
     // 状态
     var isCompleted: Bool

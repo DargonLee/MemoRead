@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ReadingListView: View {
+struct ReadingCardListView: View {
     var readingCards: [ReadingCardModel]
     
     var body: some View {
@@ -20,5 +20,5 @@ struct ReadingListView: View {
 }
 
 #Preview {
-    ReadingListView(readingCards: ReadingCardModel.sampleData())
+    ReadingCardListView(readingCards: ReadingCardModel.sampleData())
 }
