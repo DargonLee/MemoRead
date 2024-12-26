@@ -9,7 +9,6 @@ import SwiftUI
 
 struct AddButton: View {
     let addAction: () -> Void
-    @State private var isPressed: Bool = false
     
     var body: some View {
         VStack {
@@ -17,9 +16,6 @@ struct AddButton: View {
             HStack {
                 Spacer()
                 Button(action: {
-                    withAnimation(.easeOut) {
-                        isPressed = true
-                    }
                     addAction()
                 }) {
                     Image(systemName: "plus")
@@ -30,10 +26,19 @@ struct AddButton: View {
                         .clipShape(Circle())
                         .shadow(radius: 4)
                 }
+                .buttonStyle(ScaleButtonStyle())
                 .padding(.trailing, 20)
                 .padding(.bottom, 20)
             }
         }
+    }
+}
+
+struct ScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.9 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }
 
