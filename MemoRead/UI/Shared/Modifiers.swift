@@ -32,3 +32,29 @@ extension View {
         modifier(ChipModifier(color: color))
     }
 }
+
+struct TextEditorPaddingModifier: ViewModifier {
+    let padding: EdgeInsets
+    
+    init(padding: EdgeInsets = EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)) {
+        self.padding = padding
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            .textFieldStyle(.plain)
+            .padding(padding)
+#if os(macOS)
+            .background(Color(.textBackgroundColor))
+#else
+            .background(Color(.systemBackground))
+#endif
+            .cornerRadius(8)
+    }
+}
+
+extension View {
+    func textEditorPadding(_ padding: EdgeInsets = EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)) -> some View {
+        modifier(TextEditorPaddingModifier(padding: padding))
+    }
+}

@@ -25,9 +25,9 @@ struct AddCardView: View {
             .padding()
             .navigationTitle("新建阅读卡片")
             .toolbar {
-#if os(iOS)
-                navigationBarButtons
-#endif
+                #if os(iOS)
+                    navigationBarButtons
+                #endif
             }
             .sheet(isPresented: $showNotificationPicker) {
                 notificationPickerView
@@ -38,8 +38,13 @@ struct AddCardView: View {
     // MARK: - Views
     private var contentEditorView: some View {
         TextEditor(text: $content)
+            .font(.body)
+#if os(macOS)
+            .frame(height: 150)
+#else
             .frame(maxHeight: .infinity)
-            .padding(8)
+#endif
+            .textEditorPadding()
             .cornerRadius(8)
     }
 
@@ -84,27 +89,26 @@ struct AddCardView: View {
                 .chipStyle()
         }
     }
-#if os(iOS)
-    private var navigationBarButtons: some ToolbarContent {
-        Group {
-            
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("取消") {
-                    dismiss()
-                }
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("保存") {
-                    // TODO: 保存卡片逻辑
-                    dismiss()
-                }
-                .disabled(content.isEmpty)
-            }
-            
-        }
-    }
-#endif
+    #if os(iOS)
+        private var navigationBarButtons: some ToolbarContent {
+            Group {
 
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("取消") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("保存") {
+                        // TODO: 保存卡片逻辑
+                        dismiss()
+                    }
+                    .disabled(content.isEmpty)
+                }
+
+            }
+        }
+    #endif
 
     private var notificationPickerView: some View {
         NavigationStack {
@@ -117,13 +121,13 @@ struct AddCardView: View {
             .padding()
             .navigationTitle("设置提醒")
             .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") {
-                        showNotificationPicker = false
+                #if os(iOS)
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("完成") {
+                            showNotificationPicker = false
+                        }
                     }
-                }
-#endif
+                #endif
             }
         }
     }
