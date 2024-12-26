@@ -70,6 +70,7 @@ struct SettingView: View {
                 }
             }
             .navigationTitle("设置")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -78,6 +79,7 @@ struct SettingView: View {
                     }
                 }
             }
+            #endif
             .alert("确认清除数据", isPresented: $showClearDataAlert) {
                 Button("取消", role: .cancel) {}
                 Button("清除", role: .destructive) {

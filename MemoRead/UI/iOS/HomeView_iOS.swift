@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+#if os(iOS)
 struct HomeView_iOS: View {
     // MARK: - State
     @State private var selectedFilter: ReadingCardSortType = .all
@@ -83,3 +84,4 @@ struct HomeView_iOS: View {
 #Preview {
     HomeView_iOS()
 }
+#endif

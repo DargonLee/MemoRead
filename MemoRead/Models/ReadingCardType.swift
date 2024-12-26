@@ -103,3 +103,39 @@ enum Appearance: String, CaseIterable, Identifiable {
         }
     }
 }
+
+enum SidebarItem: CaseIterable, Identifiable {
+    case all
+    case text
+    case link
+    case image
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .all: return "所有"
+        case .text: return "文本"
+        case .link: return "链接"
+        case .image: return "图片"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .all: return "note.text"
+        case .text: return "doc.text"
+        case .link: return "link"
+        case .image: return "photo"
+        }
+    }
+
+    var type: ReadingCardType? {
+        switch self {
+        case .all: return nil
+        case .text: return .text
+        case .link: return .link
+        case .image: return .image
+        }
+    }
+}

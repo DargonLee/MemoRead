@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UniformTypeIdentifiers
 #if os(iOS)
 import UIKit
 #elseif os(macOS)
@@ -23,13 +24,29 @@ extension String {
     
     // Check if a string is a valid URL
     var isValidURL: Bool {
-        guard let url = URL(string: self) else {
+        guard let url = URL(string: self),
+              !url.absoluteString.isEmpty else {
             return false
         }
+        guard let scheme = url.scheme?.lowercased(),
+              ["http", "https", "ftp"].contains(scheme) else {
+            return false
+        }
+        
 #if os(iOS)
         return UIApplication.shared.canOpenURL(url)
 #elseif os(macOS)
-        return NSWorkspace.shared.open(url)
+        guard let host = url.host,
+              !host.isEmpty else {
+            return false
+        }
+        if url.isFileURL,
+           let uttype = UTType(filenameExtension: url.pathExtension) {
+            return uttype.conforms(to: .html) ||
+            uttype.conforms(to: .webArchive) ||
+            uttype.conforms(to: .text)
+        }
+        return true
 #endif
     }
     
