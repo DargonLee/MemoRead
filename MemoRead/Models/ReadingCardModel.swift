@@ -6,12 +6,13 @@
 //
 
 import Foundation
-import SwiftUI
 import SwiftData
+import SwiftUI
+
 #if os(iOS)
-import UIKit
+    import UIKit
 #else
-import AppKit
+    import AppKit
 #endif
 
 @Model
@@ -46,34 +47,34 @@ final class ReadingCardModel {
 
     // 示例数据
     static func sampleData() -> [ReadingCardModel] {
-        
-        // 创建示例卡片数组
         var samples = [
             // 长文本卡片
-            ReadingCardModel(content: """
-                SwiftUI 是一个创新的、简单的构建用户界面的框架。它提供了声明式的语法，\
-                让开发者能够轻松创建漂亮的用户界面。通过SwiftUI，您可以使用更少的代码\
-                实现更多的功能。
-                """),
-            
+            ReadingCardModel(
+                content: """
+                    SwiftUI 是一个创新的、简单的构建用户界面的框架。它提供了声明式的语法，\
+                    让开发者能够轻松创建漂亮的用户界面。通过SwiftUI，您可以使用更少的代码\
+                    实现更多的功能。
+                    """),
+
             // 链接卡片
             ReadingCardModel(content: "https://developer.apple.com/xcode/swiftui/"),
-            
+
             // 短文本卡片
             ReadingCardModel(content: "本文整理了iOS开发中常用的一些技巧和注意事项..."),
         ]
-        
+
         // 创建示例图片卡片
         let image: PlatformImage? = {
-#if os(iOS)
-            return UIImage(named: "sampleImage")
-#elseif os(macOS)
-            return NSImage(named: "sampleImage")
-#endif
+            #if os(iOS)
+                return UIImage(named: "sampleImage")
+            #elseif os(macOS)
+                return NSImage(named: "sampleImage")
+            #endif
         }()
-        
+
         guard let platformImage = image,
-              let imageModel = ReadingCardModel.createFromImage(platformImage) else {
+            let imageModel = ReadingCardModel.createFromImage(platformImage)
+        else {
             return samples
         }
         samples.append(imageModel)
@@ -83,23 +84,8 @@ final class ReadingCardModel {
 
 extension ReadingCardModel {
     var image: Image? {
-#if os(iOS)
-        guard type == ReadingCardType.image.rawValue,
-              let data = Data(base64Encoded: content),
-              let imageData = UIImage(data: data) else {
-            return nil
-        }
-        return Image(uiImage: imageData)
-#elseif os(macOS)
-        guard type == ReadingCardType.image.rawValue,
-              let data = Data(base64Encoded: content),
-              let imageData = NSImage(data: data),
-              let cgImage = imageData.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-            return nil
-        }
-        let image = Image(decorative: cgImage, scale: 1.0)
-        return image
-#endif
+        guard type == ReadingCardType.image.rawValue else { return nil }
+        return Image.create(from: content)
     }
     
     static func createFromImage(_ image: PlatformImage) -> ReadingCardModel? {

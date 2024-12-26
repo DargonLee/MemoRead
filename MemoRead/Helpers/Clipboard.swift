@@ -27,7 +27,7 @@ final class Clipboard: Sendable {
 #endif
     }
     
-    func getImage() -> PlatformClipboardImage? {
+    func getImage() -> PlatformImageType? {
 #if os(iOS)
         guard let image = UIPasteboard.general.image else {
             return nil

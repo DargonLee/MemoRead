@@ -88,5 +88,5 @@ private struct ContentLinkView: View {
 }
 
 #Preview {
-    ReadingCardContentView(item: ReadingCardModel.sampleData()[1])
+    ReadingCardContentView(item: ReadingCardModel.sampleData()[0])
 }
