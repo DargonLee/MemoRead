@@ -20,7 +20,6 @@ struct ReadingCardListView: View {
         sortOrder: ReadingCardSortOrder = .timeDescending
     ) {
         let predicate = ReadingCardModel.predicate(searchText: searchText, sortParameter: sortParameter)
-        print(predicate)
         switch sortOrder {
         case .timeAscending:
             _readingCards = Query(

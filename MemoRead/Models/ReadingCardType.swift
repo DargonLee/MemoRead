@@ -34,11 +34,11 @@ enum ReadingCardSortParameter: String, Identifiable, CaseIterable {
     var id: Self {
         self
     }
-    
+
     var toCardType: ReadingCardModel.ReadingCardType {
-        if self == .link{
+        if self == .link {
             return .link
-        }else if self == .image{
+        } else if self == .image {
             return .image
         }
         return .text
@@ -120,12 +120,12 @@ enum SidebarItem: CaseIterable, Identifiable {
         }
     }
 
-//    var type: ReadingCardType? {
-//        switch self {
-//        case .all: return nil
-//        case .text: return .text
-//        case .link: return .link
-//        case .image: return .image
-//        }
-//    }
+    var type: ReadingCardSortParameter {
+        switch self {
+        case .all: return .all
+        case .text: return .text
+        case .link: return .link
+        case .image: return .image
+        }
+    }
 }
