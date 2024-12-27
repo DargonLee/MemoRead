@@ -32,7 +32,7 @@ enum ReadingCardSortType: String, Identifiable, CaseIterable {
     case link
     case image
 
-    var title: String {
+    var name: String {
         switch self {
         case .all: return "全部"
         case .text: return "文本"
@@ -59,7 +59,7 @@ enum ReadingCardSortOption: String, Identifiable, CaseIterable {
     case timeDescending
     case timeAscending
 
-    var title: String {
+    var name: String {
         switch self {
         case .timeDescending: return "最新"
         case .timeAscending: return "最早"

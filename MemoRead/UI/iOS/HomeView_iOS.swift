@@ -46,41 +46,15 @@ struct HomeView_iOS: View {
             settingsButton
         }
         ToolbarItem(placement: .navigationBarTrailing) {
-            filterMenu
+            SortButton(selectedFilter: $selectedFilter, selectedSort: $selectedSort)
         }
     }
     
     private var settingsButton: some View {
         Button(action: {
-            isSettingPresented = true
+            isSettingPresented.toggle()
         }) {
             Image(systemName: "gearshape")
-        }
-    }
-    
-    private var filterMenu: some View {
-        Menu {
-            // 筛选选项
-            Section {
-                ForEach(ReadingCardSortType.allCases) { filter in
-                    Button(action: { selectedFilter = filter }) {
-                        Label(
-                            filter.title,
-                            systemImage: selectedFilter == filter ? "checkmark" : "")
-                    }
-                }
-            }
-            
-            // 排序选项
-            Section {
-                ForEach(ReadingCardSortOption.allCases) { sort in
-                    Button(action: { selectedSort = sort }) {
-                        Label(sort.title, systemImage: selectedSort == sort ? "checkmark" : "")
-                    }
-                }
-            }
-        } label: {
-            Image(systemName: "line.3.horizontal.decrease.circle")
         }
     }
 }
