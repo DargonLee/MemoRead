@@ -72,22 +72,22 @@ struct AddCardView: View {
     private var tomorrowMorningButton: some View {
         Button(action: setTomorrowMorning) {
             Text("明天上午")
-                .chipStyle()
         }
+        .buttonStyle(BorderedButtonStyle())
     }
 
     private var tonightButton: some View {
         Button(action: setTonight) {
             Text("今晚")
-                .chipStyle()
         }
+        .buttonStyle(BorderedButtonStyle())
     }
 
     private var customTimeButton: some View {
         Button(action: { showNotificationPicker.toggle() }) {
             Text("自定义")
-                .chipStyle()
         }
+        .buttonStyle(BorderedButtonStyle())
     }
     #if os(iOS)
         private var navigationBarButtons: some ToolbarContent {
