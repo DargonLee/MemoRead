@@ -7,26 +7,7 @@
 
 import Foundation
 
-enum ReadingCardType: String, CaseIterable {
-    // 文章类型
-    case text = "文本"
-    case link = "链接"
-    case image = "图片"
-
-    // 获取类型图标
-    var icon: String {
-        switch self {
-        case .text:
-            return "doc.text"
-        case .link:
-            return "link"
-        case .image:
-            return "photo"
-        }
-    }
-}
-
-enum ReadingCardSortType: String, Identifiable, CaseIterable {
+enum ReadingCardSortParameter: String, Identifiable, CaseIterable {
     case all
     case text
     case link
@@ -55,7 +36,7 @@ enum ReadingCardSortType: String, Identifiable, CaseIterable {
     }
 }
 
-enum ReadingCardSortOption: String, Identifiable, CaseIterable {
+enum ReadingCardSortOrder: String, Identifiable, CaseIterable {
     case timeDescending
     case timeAscending
 
@@ -130,12 +111,12 @@ enum SidebarItem: CaseIterable, Identifiable {
         }
     }
 
-    var type: ReadingCardType? {
-        switch self {
-        case .all: return nil
-        case .text: return .text
-        case .link: return .link
-        case .image: return .image
-        }
-    }
+//    var type: ReadingCardType? {
+//        switch self {
+//        case .all: return nil
+//        case .text: return .text
+//        case .link: return .link
+//        case .image: return .image
+//        }
+//    }
 }

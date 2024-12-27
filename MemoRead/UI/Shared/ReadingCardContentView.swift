@@ -12,16 +12,13 @@ struct ReadingCardContentView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            switch ReadingCardType(rawValue: item.type) {
+            switch item.type {
             case .image:
                 ContentImageView(item: item)
             case .link:
                 ContentLinkView(content: item.content)
             case .text:
                 ContentTextView(content: item.content)
-            case .none:
-                ContentUnavailableView(
-                    "暂无内容", image: "doc.text.magnifyingglass", description: Text("暂无内容"))
             }
         }
 #if os(macOS)
@@ -94,5 +91,5 @@ private struct ContentLinkView: View {
 }
 
 #Preview {
-    ReadingCardContentView(item: ReadingCardModel.sampleData()[0])
+    ReadingCardContentView(item: ReadingCardModel.sampleCards()[0])
 }

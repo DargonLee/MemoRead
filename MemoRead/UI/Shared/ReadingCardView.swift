@@ -10,13 +10,14 @@ import SwiftUI
 struct ReadingCardView: View {
     let item: ReadingCardModel
     @State private var isCompleted: Bool
-    private let type: ReadingCardType
+    private var type = ReadingCardModel.ReadingCardType.text
 
     // MARK: - Initialization
     init(item: ReadingCardModel) {
         self.item = item
+        print(item.createdAt)
         _isCompleted = State(initialValue: item.isCompleted)
-        self.type = ReadingCardType(rawValue: item.type)!
+        self.type = item.type
     }
 
     // MARK: - Body
@@ -60,7 +61,7 @@ struct ReadingCardView: View {
 
 // MARK: - Supporting Views
 private struct CardTypeLabel: View {
-    let type: ReadingCardType
+    let type: ReadingCardModel.ReadingCardType
 
     var body: some View {
         HStack {
@@ -86,7 +87,7 @@ private struct TimeAgoLabel: View {
 }
 
 private struct CompleteButton: View {
-    let type: ReadingCardType
+    let type: ReadingCardModel.ReadingCardType
     @Binding var isCompleted: Bool
     let action: () -> Void
 
@@ -123,5 +124,5 @@ extension View {
 }
 
 #Preview {
-    ReadingCardView(item: ReadingCardModel.sampleData()[0])
+    ReadingCardView(item: ReadingCardModel.sampleCards()[0])
 }

@@ -16,6 +16,9 @@ struct HomeView: View {
             HomeView_macOS()
 #endif
         }
+        .refreshable {
+            
+        }
     }
 }
 

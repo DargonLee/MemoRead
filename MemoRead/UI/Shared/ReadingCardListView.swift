@@ -6,9 +6,35 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ReadingCardListView: View {
-    var readingCards: [ReadingCardModel]
+    @Environment(HomeViewModel.self) private var viewModel
+    @Environment(\.modelContext) private var modelContext
+    
+    @Query private var readingCards: [ReadingCardModel]
+    
+    init(
+        searchText: String = "",
+        sortParameter: ReadingCardSortParameter = .all,
+        sortOrder: ReadingCardSortOrder = .timeDescending
+    ) {
+        let predicate = ReadingCardModel.predicate(searchText: searchText, sortParameter: sortParameter)
+        switch sortOrder {
+        case .timeAscending:
+            _readingCards = Query(
+                filter: predicate,
+                sort: \.createdAt,
+                order: .forward
+            )
+        case .timeDescending:
+            _readingCards = Query(
+                filter: predicate,
+                sort: \.createdAt,
+                order: .reverse
+            )
+        }
+    }
     
     var body: some View {
         List {
@@ -17,8 +43,4 @@ struct ReadingCardListView: View {
             }
         }
     }
-}
-
-#Preview {
-    ReadingCardListView(readingCards: ReadingCardModel.sampleData())
 }

@@ -8,19 +8,20 @@
 import SwiftUI
 
 struct SortButton: View {
-    @Binding var selectedFilter: ReadingCardSortType
-    @Binding var selectedSort: ReadingCardSortOption
+    @Environment(HomeViewModel.self) private var viewModel
     
     var body: some View {
+        @Bindable var viewModel = viewModel
+        
         Menu {
-            Picker("Sort By", selection: $selectedFilter) {
-                ForEach(ReadingCardSortType.allCases) { order in
+            Picker("Sort By", selection: $viewModel.sortParameter) {
+                ForEach(ReadingCardSortParameter.allCases) { order in
                     Text(order.name)
                 }
             }
 
-            Picker("Sort Order", selection: $selectedSort) {
-                ForEach(ReadingCardSortOption.allCases) { order in
+            Picker("Sort Order", selection: $viewModel.sortOrder) {
+                ForEach(ReadingCardSortOrder.allCases) { order in
                     Text(order.name)
                 }
             }

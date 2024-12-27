@@ -9,18 +9,26 @@ import SwiftUI
 
 #if os(iOS)
 struct HomeView_iOS: View {
+    // MARK: - Environment
+    @Environment(HomeViewModel.self) private var viewModel
+    @Environment(\.modelContext) private var modelContxt
+    
     // MARK: - State
-    @State private var selectedFilter: ReadingCardSortType = .all
-    @State private var selectedSort: ReadingCardSortOption = .timeAscending
-    @State private var searchText: String = ""
     @State private var isSettingPresented: Bool = false
     @State private var isAddCardPresented: Bool = false
+    
     var body: some View {
+        @Bindable var viewModel = viewModel
+        
         NavigationStack {
             ZStack {
                 VStack {
-                    ReadingCardListView(readingCards: ReadingCardModel.sampleData())
-                        .searchable(text: $searchText, prompt: "搜索")
+                    ReadingCardListView(
+                        searchText: viewModel.searchText,
+                        sortParameter: viewModel.sortParameter,
+                        sortOrder: viewModel.sortOrder
+                    )
+                        .searchable(text: $viewModel.searchText, prompt: "搜索")
                         .navigationTitle("MemoRead")
                         .toolbar {
                             toolbarItem()
@@ -46,7 +54,7 @@ struct HomeView_iOS: View {
             settingsButton
         }
         ToolbarItem(placement: .navigationBarTrailing) {
-            SortButton(selectedFilter: $selectedFilter, selectedSort: $selectedSort)
+            SortButton( )
         }
     }
     
@@ -60,6 +68,13 @@ struct HomeView_iOS: View {
 }
 
 #Preview {
-    HomeView_iOS()
+    @Previewable @State var viewModel = HomeViewModel()
+    let preview = Preview(ReadingCardModel.self)
+    let cards = ReadingCardModel.sampleCards()
+    preview.addExamples(cards)
+    
+    return HomeView_iOS()
+            .environment(viewModel)
+            .modelContainer(preview.container)
 }
 #endif
