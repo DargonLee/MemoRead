@@ -65,7 +65,7 @@ private struct CardTypeLabel: View {
     var body: some View {
         HStack {
             Image(systemName: type.icon)
-            Text(type.rawValue)
+            Text(type.name)
                 .font(.caption)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)

@@ -36,12 +36,10 @@ final class ReadingCardModel {
     ) {
         self.content = content
         self.type =
-        content.isValidURL
-        ? ReadingCardType.link.rawValue
-        : (
-            content.isValidImageData
-            ? ReadingCardType.image.rawValue : ReadingCardType.text.rawValue
-        )
+            content.isValidURL
+            ? ReadingCardType.link.rawValue
+            : (content.isValidImageData
+                ? ReadingCardType.image.rawValue : ReadingCardType.text.rawValue)
         self.createdAt = createdAt
         self.reminderAt = reminderAt
         self.isCompleted = false
@@ -54,11 +52,21 @@ final class ReadingCardModel {
 }
 
 extension ReadingCardModel {
-    enum ReadingCardType: String, CaseIterable, Codable {
-        case text = "doc"
-        case link = "link"
-        case image = "image"
+    enum ReadingCardType: Int, CaseIterable, Codable {
+        case text
+        case link
+        case image
 
+        var name: String {
+            switch self {
+            case .text:
+                return "文本"
+            case .link:
+                return "链接"
+            case .image:
+                return "图片"
+            }
+        }
         var icon: String {
             switch self {
             case .text:
@@ -93,7 +101,7 @@ extension ReadingCardModel {
         sortParameter: ReadingCardSortParameter
     ) -> Predicate<ReadingCardModel> {
         let typeValue = sortParameter.toCardType.rawValue
-        
+
         switch sortParameter {
         case .all:
             return #Predicate<ReadingCardModel> { model in
@@ -102,7 +110,7 @@ extension ReadingCardModel {
         default:
             return #Predicate<ReadingCardModel> { model in
                 (searchText.isEmpty || model.content.contains(searchText))
-                && model.type == typeValue
+                    && model.type == typeValue
             }
         }
     }
@@ -119,48 +127,49 @@ extension ReadingCardModel {
                     让开发者能够轻松创建漂亮的用户界面。通过SwiftUI，您可以使用更少的代码\
                     实现更多的功能。
                     """,
-                createdAt: .now.addingTimeInterval(-86400 * 3)), // 3天前
-            
+                createdAt: .now.addingTimeInterval(-86400 * 3)),  // 3天前
+
             // 链接卡片
             ReadingCardModel(
                 content: "https://developer.apple.com/xcode/swiftui/",
-                createdAt: .now.addingTimeInterval(-86400)), // 1天前
-            
+                createdAt: .now.addingTimeInterval(-86400)),  // 1天前
+
             // 短文本卡片
             ReadingCardModel(
                 content: "本文整理了iOS开发中常用的一些技巧和注意事项...",
-                createdAt: .now.addingTimeInterval(-86400 * 2)), // 2天前
-                
+                createdAt: .now.addingTimeInterval(-86400 * 2)),  // 2天前
+
             // 技术文章卡片
             ReadingCardModel(
                 content: """
                     Swift并发编程中的async/await是一个强大的特性,它可以让异步代码的编写变得更加简单和直观。\
                     通过使用async关键字标记异步函数,await关键字等待异步操作完成,我们可以用同步的方式编写异步代码。
                     """,
-                createdAt: .now), // 现在
-                
+                createdAt: .now),  // 现在
+
             // 开发文档链接
             ReadingCardModel(
-                content: "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/",
-                createdAt: .now.addingTimeInterval(-3600)), // 1小时前
-                
+                content:
+                    "https://docs.swift.org/swift-book/documentation/the-swift-programming-language/",
+                createdAt: .now.addingTimeInterval(-3600)),  // 1小时前
+
             // 学习笔记
             ReadingCardModel(
                 content: "SwiftUI中的@State、@Binding、@StateObject等属性包装器的使用场景和区别...",
-                createdAt: .now.addingTimeInterval(-7200)), // 2小时前
+                createdAt: .now.addingTimeInterval(-7200)),  // 2小时前
         ]
-        
+
         // 创建示例图片卡片
         let image: PlatformImage? = {
-#if os(iOS)
-            return UIImage(named: "sampleImage")
-#elseif os(macOS)
-            return NSImage(named: "sampleImage")
-#endif
+            #if os(iOS)
+                return UIImage(named: "sampleImage")
+            #elseif os(macOS)
+                return NSImage(named: "sampleImage")
+            #endif
         }()
-        
+
         guard let platformImage = image,
-              let imageModel = ReadingCardModel.createFromImage(platformImage)
+            let imageModel = ReadingCardModel.createFromImage(platformImage)
         else {
             return samples
         }
