@@ -69,63 +69,46 @@ enum ReadingCardSortOrder: String, Identifiable, CaseIterable {
 }
 
 enum Appearance: String, CaseIterable, Identifiable {
-    case automatic
-    case light
-    case dark
+    case automatic, light, dark
 
-    var id: Self {
-        self
-    }
+    var id: Self { self }
+
+    private static let properties: [Self: (description: String, icon: String)] = [
+        .automatic: ("自动", "circle.lefthalf.filled"),
+        .light: ("浅色", "sun.min.fill"),
+        .dark: ("深色", "moon.fill")
+    ]
 
     var description: String {
-        switch self {
-        case .automatic: return "自动"
-        case .light: return "浅色"
-        case .dark: return "深色"
-        }
+        Self.properties[self]?.description ?? ""
     }
 
     var icon: String {
-        switch self {
-        case .automatic: return "circle.lefthalf.filled"
-        case .light: return "sun.min.fill"
-        case .dark: return "moon.fill"
-        }
+        Self.properties[self]?.icon ?? ""
     }
 }
 
 enum SidebarItem: CaseIterable, Identifiable {
-    case all
-    case text
-    case link
-    case image
+    case all, text, link, image
 
     var id: Self { self }
 
+    private static let properties: [Self: (title: String, icon: String, type: ReadingCardSortParameter)] = [
+        .all: ("所有", "note.text", .all),
+        .text: ("文本", "doc.text", .text),
+        .link: ("链接", "link", .link),
+        .image: ("图片", "photo", .image)
+    ]
+
     var title: String {
-        switch self {
-        case .all: return "所有"
-        case .text: return "文本"
-        case .link: return "链接"
-        case .image: return "图片"
-        }
+        Self.properties[self]?.title ?? ""
     }
 
     var icon: String {
-        switch self {
-        case .all: return "note.text"
-        case .text: return "doc.text"
-        case .link: return "link"
-        case .image: return "photo"
-        }
+        Self.properties[self]?.icon ?? ""
     }
 
     var type: ReadingCardSortParameter {
-        switch self {
-        case .all: return .all
-        case .text: return .text
-        case .link: return .link
-        case .image: return .image
-        }
+        Self.properties[self]?.type ?? .all
     }
 }
