@@ -39,11 +39,11 @@ struct AddCardView: View {
     private var contentEditorView: some View {
         TextEditor(text: $content)
             .font(.body)
-#if os(macOS)
-            .frame(height: 150)
-#else
-            .frame(maxHeight: .infinity)
-#endif
+            #if os(macOS)
+                .frame(height: 150)
+            #else
+                .frame(maxHeight: .infinity)
+            #endif
             .textEditorPadding()
             .cornerRadius(8)
     }
@@ -51,22 +51,19 @@ struct AddCardView: View {
     private var notificationTimeView: some View {
         Text(selectedNotificationTime.formatted(date: .abbreviated, time: .shortened))
             .foregroundColor(.gray)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var notificationButtonsView: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 12) {
-                Image(systemName: "bell")
-                    .foregroundColor(.blue)
-                    .symbolEffect(.bounce, value: 1)
-                tomorrowMorningButton
-                tonightButton
-                customTimeButton
-                Spacer()
-            }
+        HStack(spacing: 12) {
+            Image(systemName: "bell")
+                .foregroundColor(.blue)
+                .symbolEffect(.bounce, value: 1)
+            tomorrowMorningButton
+            tonightButton
+            customTimeButton
+            Spacer()
         }
-        .padding()
-        .cornerRadius(8)
     }
 
     private var tomorrowMorningButton: some View {

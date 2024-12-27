@@ -31,18 +31,28 @@ struct HomeView_macOS: View {
 // MARK: - Sidebar View
 private struct SidebarView: View {
     @Binding var selectedType: ReadingCardType?
+    @State private var showSettings = false
     
     var body: some View {
         List(selection: $selectedType) {
-            Section("笔记") {
-                ForEach(SidebarItem.allCases) { item in
-                    NavigationLink(value: item.type) {
-                        Label(item.title, systemImage: item.icon)
-                    }
+            ForEach(SidebarItem.allCases) { item in
+                NavigationLink(value: item.type) {
+                    Label(item.title, systemImage: item.icon)
                 }
             }
         }
         .listStyle(.sidebar)
+        .safeAreaInset(edge: .bottom) {
+            Button(action: { showSettings.toggle() }) {
+                Label("设置", systemImage: "gearshape")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(8)
+            }
+            .buttonStyle(.borderless)
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingView()
+        }
     }
 }
 
@@ -54,20 +64,25 @@ private struct MemoListView: View {
     @State private var showAddSheet: Bool = true
     
     var body: some View {
-        VStack {
-            ReadingCardListView(
-                readingCards: getFilteredCards()
-            )
-            .searchable(text: $searchText, prompt: "搜索")
-        }
-        .navigationTitle("MemoRead")
-        .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
-                sortButton
+        ZStack {
+            VStack {
+                ReadingCardListView(
+                    readingCards: getFilteredCards()
+                )
+                .searchable(text: $searchText, prompt: "搜索")
             }
-        }
-        .sheet(isPresented: $showAddSheet) {
-            AddCardView()
+            .navigationTitle("MemoRead")
+            .toolbar {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    sortButton
+                }
+            }
+            .sheet(isPresented: $showAddSheet) {
+                AddCardView()
+            }
+            AddButton(addAction: {
+                showAddSheet = true
+            })
         }
     }
     
@@ -80,7 +95,7 @@ private struct MemoListView: View {
                         Spacer()
                         if sortOption == option {
                             Image(systemName: "checkmark.circle")
-                        }else {
+                        } else {
                             Image(systemName: "circle")
                         }
                     }
@@ -90,7 +105,6 @@ private struct MemoListView: View {
             Image(systemName: "arrow.up.arrow.down")
         }
     }
-    
     
     // MARK: - Helper Methods
     private func getFilteredCards() -> [ReadingCardModel] {

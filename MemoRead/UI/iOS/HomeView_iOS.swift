@@ -18,26 +18,28 @@ struct HomeView_iOS: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                ReadingCardListView(readingCards: ReadingCardModel.sampleData())
-                    .searchable(text: $searchText, prompt: "搜索")
-                    .navigationTitle("MemoRead")
-                    .toolbar {
-                        toolbarItem()
-                    }
-                    .sheet(isPresented: $isSettingPresented) {
-                        SettingView()
-                    }
-                    .sheet(isPresented: $isAddCardPresented) {
-                        AddCardView()
-                            .presentationDetents([.medium])
-                    }
+                VStack {
+                    ReadingCardListView(readingCards: ReadingCardModel.sampleData())
+                        .searchable(text: $searchText, prompt: "搜索")
+                        .navigationTitle("MemoRead")
+                        .toolbar {
+                            toolbarItem()
+                        }
+                }
+                .sheet(isPresented: $isSettingPresented) {
+                    SettingView()
+                }
+                .sheet(isPresented: $isAddCardPresented) {
+                    AddCardView()
+                        .presentationDetents([.medium])
+                }
                 AddButton(addAction: {
                     isAddCardPresented = true
                 })
             }
         }
     }
-
+    
     @ToolbarContentBuilder
     private func toolbarItem() -> some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
@@ -47,7 +49,7 @@ struct HomeView_iOS: View {
             filterMenu
         }
     }
-
+    
     private var settingsButton: some View {
         Button(action: {
             isSettingPresented = true
@@ -55,19 +57,21 @@ struct HomeView_iOS: View {
             Image(systemName: "gearshape")
         }
     }
-
+    
     private var filterMenu: some View {
         Menu {
             // 筛选选项
             Section {
                 ForEach(ReadingCardSortType.allCases) { filter in
                     Button(action: { selectedFilter = filter }) {
-                        Label(filter.title, systemImage: selectedFilter == filter ? "checkmark" : "")
+                        Label(
+                            filter.title,
+                            systemImage: selectedFilter == filter ? "checkmark" : "")
                     }
                 }
             }
-
-            // 排序选项 
+            
+            // 排序选项
             Section {
                 ForEach(ReadingCardSortOption.allCases) { sort in
                     Button(action: { selectedSort = sort }) {
