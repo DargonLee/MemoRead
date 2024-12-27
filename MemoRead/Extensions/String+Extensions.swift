@@ -17,9 +17,9 @@ import OSLog
 extension String {
     func copyToClipboard() {
         Clipboard.shared.setString(self)
-        #if DEBUG
+#if DEBUG
         Logger.main.debug("Copied to clipboard: \(self)")
-        #endif
+#endif
     }
     
     // Check if a string is a valid URL

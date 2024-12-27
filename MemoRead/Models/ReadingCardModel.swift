@@ -19,7 +19,7 @@ import SwiftUI
 final class ReadingCardModel {
     // 基本信息
     var content: String
-    var type: ReadingCardType
+    var type: ReadingCardType.RawValue
 
     // 时间相关
     var createdAt: Date
@@ -37,10 +37,10 @@ final class ReadingCardModel {
         self.content = content
         self.type =
         content.isValidURL
-        ? ReadingCardType.link
+        ? ReadingCardType.link.rawValue
         : (
             content.isValidImageData
-            ? ReadingCardType.image : ReadingCardType.text
+            ? ReadingCardType.image.rawValue : ReadingCardType.text.rawValue
         )
         self.createdAt = createdAt
         self.reminderAt = reminderAt
@@ -74,7 +74,7 @@ extension ReadingCardModel {
 
 extension ReadingCardModel {
     var image: Image? {
-        guard type == ReadingCardType.image else { return nil }
+        guard type == ReadingCardType.image.rawValue else { return nil }
         return Image.create(from: content)
     }
 
@@ -88,17 +88,22 @@ extension ReadingCardModel {
 }
 
 extension ReadingCardModel {
-    static func predicate(searchText: String, sortParameter: ReadingCardSortParameter) -> Predicate<ReadingCardModel> {
-        return #Predicate<ReadingCardModel> { model in
-            (searchText.isEmpty || model.content.contains(searchText))
-//            let textCondition = searchText.isEmpty || model.content.contains(searchText)
-//            let typeCondition = switch sortParameter {
-//                case .all: true
-//                case .text: model.type == .text
-//                case .link: model.type == .link
-//                case .image: model.type == .image
-//            }
-//            textCondition && typeCondition
+    static func predicate(
+        searchText: String,
+        sortParameter: ReadingCardSortParameter
+    ) -> Predicate<ReadingCardModel> {
+        let typeValue = sortParameter.toCardType.rawValue
+        
+        switch sortParameter {
+        case .all:
+            return #Predicate<ReadingCardModel> { model in
+                searchText.isEmpty || model.content.contains(searchText)
+            }
+        default:
+            return #Predicate<ReadingCardModel> { model in
+                (searchText.isEmpty || model.content.contains(searchText))
+                && model.type == typeValue
+            }
         }
     }
 }

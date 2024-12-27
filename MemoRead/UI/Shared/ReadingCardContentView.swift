@@ -12,21 +12,24 @@ struct ReadingCardContentView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            switch item.type {
+            switch ReadingCardModel.ReadingCardType(rawValue: item.type) {
             case .image:
                 ContentImageView(item: item)
             case .link:
                 ContentLinkView(content: item.content)
             case .text:
                 ContentTextView(content: item.content)
+            case .none:
+                ContentUnavailableView(
+                    "暂无内容", image: "doc.text.magnifyingglass", description: Text("暂无内容"))
             }
         }
-#if os(macOS)
-        .contextMenu {
-            Button("删除") { }
-            Button("复制") { }
-        }
-#endif
+        #if os(macOS)
+            .contextMenu {
+                Button("删除") {}
+                Button("复制") {}
+            }
+        #endif
     }
 }
 
@@ -58,15 +61,15 @@ private struct ContentImageView: View {
 
 private struct ContentTextView: View {
     let content: String
-    
+
     var body: some View {
         Text(content)
             .font(.body)
-#if os(iOS)
-            .lineLimit(3)
-#elseif os(macOS)
-            .lineLimit(5)
-#endif
+            #if os(iOS)
+                .lineLimit(3)
+            #elseif os(macOS)
+                .lineLimit(5)
+            #endif
             .multilineTextAlignment(.leading)
             .lineSpacing(6)
             .padding(.vertical, 4)
@@ -81,11 +84,11 @@ private struct ContentLinkView: View {
         let url = URL(string: content)!
         return Link(destination: url) {
             Text(url.absoluteString)
-#if os(iOS)
-            .lineLimit(3)
-#elseif os(macOS)
-            .lineLimit(5)
-#endif
+                #if os(iOS)
+                    .lineLimit(3)
+                #elseif os(macOS)
+                    .lineLimit(5)
+                #endif
         }
     }
 }

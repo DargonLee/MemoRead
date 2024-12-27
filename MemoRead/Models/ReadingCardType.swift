@@ -8,10 +8,10 @@
 import Foundation
 
 enum ReadingCardSortParameter: String, Identifiable, CaseIterable {
-    case all
-    case text
-    case link
-    case image
+    case all = "all"
+    case text = "doc"
+    case link = "link"
+    case image = "image"
 
     var name: String {
         switch self {
@@ -33,6 +33,15 @@ enum ReadingCardSortParameter: String, Identifiable, CaseIterable {
 
     var id: Self {
         self
+    }
+    
+    var toCardType: ReadingCardModel.ReadingCardType {
+        if self == .link{
+            return .link
+        }else if self == .image{
+            return .image
+        }
+        return .text
     }
 }
 

@@ -10,14 +10,13 @@ import SwiftUI
 struct ReadingCardView: View {
     let item: ReadingCardModel
     @State private var isCompleted: Bool
-    private var type = ReadingCardModel.ReadingCardType.text
+    private var type: ReadingCardModel.ReadingCardType
 
     // MARK: - Initialization
     init(item: ReadingCardModel) {
         self.item = item
-        print(item.createdAt)
         _isCompleted = State(initialValue: item.isCompleted)
-        self.type = item.type
+        self.type = ReadingCardModel.ReadingCardType(rawValue: item.type)!
     }
 
     // MARK: - Body
