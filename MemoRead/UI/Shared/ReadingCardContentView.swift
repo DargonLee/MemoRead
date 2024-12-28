@@ -21,7 +21,7 @@ struct ReadingCardContentView: View {
                 ContentTextView(content: item.content)
             case .none:
                 ContentUnavailableView(
-                    "暂无内容", image: "doc.text.magnifyingglass", description: Text("暂无内容"))
+                    "Empty", image: "doc.text.magnifyingglass", description: Text("Empty"))
             }
         }
 #if os(macOS)
@@ -50,7 +50,7 @@ private struct ContentImageView: View {
                     .scaledToFit()
                     .frame(height: 60)
                     .foregroundColor(.gray)
-                Text("图片解析失败")
+                Text("Image not found")
                     .font(.caption)
                     .foregroundColor(.gray)
             }

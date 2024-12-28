@@ -7,7 +7,6 @@
 
 import Foundation
 
-// 日期扩展
 extension Date {
     func timeAgoDisplay() -> String {
         let calendar = Calendar.current
@@ -15,15 +14,15 @@ extension Date {
         let components = calendar.dateComponents([.minute, .hour, .day, .month], from: self, to: now)
         
         if let month = components.month, month > 0 {
-            return "\(month)个月前"
+            return "\(month) months ago"
         } else if let day = components.day, day > 0 {
-            return "\(day)天前"
+            return "\(day) days ago"
         } else if let hour = components.hour, hour > 0 {
-            return "\(hour)小时前"
+            return "\(hour) hours ago"
         } else if let minute = components.minute, minute > 0 {
-            return "\(minute)分钟前"
+            return "\(minute) minutes ago"
         } else {
-            return "刚刚"
+            return "just now"
         }
     }
 }

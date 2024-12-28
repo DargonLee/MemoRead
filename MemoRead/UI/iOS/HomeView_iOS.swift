@@ -27,7 +27,7 @@ struct HomeView_iOS: View {
                         sortParameter: viewModel.sortParameter,
                         sortOrder: viewModel.sortOrder
                     )
-                        .searchable(text: $viewModel.searchText, prompt: "搜索")
+                        .searchable(text: $viewModel.searchText, prompt: "Search")
                         .navigationTitle("MemoRead")
                         .toolbar {
                             toolbarItem()

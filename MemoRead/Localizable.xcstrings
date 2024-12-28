@@ -1,0 +1,112 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "About" : {
+
+    },
+    "After activation, you will receive reading reminders and synchronization completion notifications" : {
+
+    },
+    "Appearance" : {
+
+    },
+    "Appearance Mode" : {
+
+    },
+    "Cancel" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
+    "Clear" : {
+
+    },
+    "Clear All Data" : {
+
+    },
+    "Completed" : {
+
+    },
+    "Confirm to Clear Data" : {
+
+    },
+    "Create Reading Card" : {
+
+    },
+    "Custom" : {
+
+    },
+    "Data Management" : {
+
+    },
+    "Done" : {
+
+    },
+    "Empty" : {
+
+    },
+    "iCloud Sync" : {
+
+    },
+    "Image not found" : {
+
+    },
+    "Last sync time: %@" : {
+
+    },
+    "MemoRead" : {
+
+    },
+    "Notification" : {
+
+    },
+    "Refresh" : {
+
+    },
+    "Reminder Time" : {
+
+    },
+    "Search" : {
+
+    },
+    "Select Reminder Time" : {
+
+    },
+    "Setting" : {
+
+    },
+    "Sort" : {
+
+    },
+    "Sort By" : {
+
+    },
+    "Sort Order" : {
+
+    },
+    "Svae" : {
+
+    },
+    "Sync" : {
+
+    },
+    "This operation will clear all local data and it cannot be recovered. Do you want to continue?" : {
+
+    },
+    "Tomorrow Morning" : {
+
+    },
+    "Tonight" : {
+
+    },
+    "Version" : {
+
+    }
+  },
+  "version" : "1.0"
+}

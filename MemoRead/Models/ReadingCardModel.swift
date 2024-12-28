@@ -67,13 +67,14 @@ extension ReadingCardModel {
         var name: String {
             switch self {
             case .text:
-                return "文本"
+                return "Text"
             case .link:
-                return "链接"
+                return "Link"
             case .image:
-                return "图片"
+                return "Image"
             }
         }
+        
         var icon: String {
             switch self {
             case .text:

@@ -94,7 +94,7 @@ private struct CompleteButton: View {
         Button(action: action) {
             Group {
                 if isCompleted {
-                    Text("已完成")
+                    Text("Completed")
                         .foregroundColor(.gray)
                 } else if type == .image {
                     Image(systemName: "square.and.arrow.down")

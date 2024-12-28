@@ -25,7 +25,7 @@ struct AddCardView: View {
                 notificationButtonsView
             }
             .padding()
-            .navigationTitle("新建阅读卡片")
+            .navigationTitle("Create Reading Card")
             .toolbar {
                 #if os(iOS)
                     navigationBarButtons
@@ -70,21 +70,21 @@ struct AddCardView: View {
 
     private var tomorrowMorningButton: some View {
         Button(action: setTomorrowMorning) {
-            Text("明天上午")
+            Text("Tomorrow Morning")
         }
         .buttonStyle(BorderedButtonStyle())
     }
 
     private var tonightButton: some View {
         Button(action: setTonight) {
-            Text("今晚")
+            Text("Tonight")
         }
         .buttonStyle(BorderedButtonStyle())
     }
 
     private var customTimeButton: some View {
         Button(action: { showNotificationPicker.toggle() }) {
-            Text("自定义")
+            Text("Custom")
         }
         .buttonStyle(BorderedButtonStyle())
     }
@@ -92,12 +92,12 @@ struct AddCardView: View {
     private var navigationBarButtons: some ToolbarContent {
         Group {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button("取消") {
+                Button("Cancel") {
                     dismiss()
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("保存") {
+                Button("Svae") {
                     saveCard()
                     dismiss()
                 }
@@ -111,17 +111,17 @@ struct AddCardView: View {
     private var notificationPickerView: some View {
         NavigationStack {
             DatePicker(
-                "选择提醒时间",
+                "Reminder Time",
                 selection: $selectedNotificationTime,
                 in: Date()...
             )
             .datePickerStyle(.graphical)
             .padding()
-            .navigationTitle("设置提醒")
+            .navigationTitle("Select Reminder Time")
             .toolbar {
 #if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") {
+                    Button("Done") {
                         showNotificationPicker = false
                     }
                 }

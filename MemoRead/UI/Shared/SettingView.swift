@@ -1,47 +1,49 @@
-//
-//  SettingView.swift
-//  MemoRead
-//
-//  Created by Harlans on 2024/12/26.
-//
+    //
+    //  SettingView.swift
+    //  MemoRead
+    //
+    //  Created by Harlans on 2024/12/26.
+    //
 
 import SwiftUI
 
 struct SettingView: View {
-    // MARK: - State
+        // MARK: - State
     @Environment(\.dismiss) private var dismiss
     @AppStorage("enableAutoSync") private var enableAutoSync = true
     @AppStorage("enableNotification") private var enableNotification = true
     @AppStorage("enableDarkMode") private var enableDarkMode = false
     @State private var showClearDataAlert = false
     @State private var selectedAppearance: Appearance = .automatic
-
+    @AppStorage("lastSyncTime") private var lastSyncTime = Date()
+    
+    var version: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+    }
+    
     var body: some View {
         NavigationStack {
             Form {
-                // 同步设置
-                Section("同步") {
-                    Toggle("iCloud 同步", isOn: $enableAutoSync)
+                Section("Sync") {
+                    Toggle("iCloud Sync", isOn: $enableAutoSync)
                     if enableAutoSync {
-                        Text("上次同步时间: 3天前")
+                        Text("Last sync time: \(String(describing: lastSyncTime.timeAgoDisplay))")
                             .font(.caption)
                             .foregroundColor(.gray)
                     }
                 }
-
-                // 通知设置
-                Section("通知") {
-                    Toggle("推送通知", isOn: $enableNotification)
+                
+                Section("Notification") {
+                    Toggle("Notification", isOn: $enableNotification)
                     if enableNotification {
-                        Text("开启后将接收阅读提醒和同步完成通知")
+                        Text("After activation, you will receive reading reminders and synchronization completion notifications")
                             .font(.caption)
                             .foregroundColor(.gray)
                     }
                 }
-
-                // 外观设置
-                Section("外观") {
-                    Picker("外观模式", selection: $selectedAppearance) {
+                
+                Section("Appearance") {
+                    Picker("Appearance Mode", selection: $selectedAppearance) {
                         ForEach(Appearance.allCases) { appearance in
                             Label(appearance.description, systemImage: appearance.icon)
                                 .tag(appearance)
@@ -49,44 +51,42 @@ struct SettingView: View {
                     }
                     .pickerStyle(.menu)
                 }
-
-                // 数据管理
-                Section("数据管理") {
+                
+                Section("Data Management") {
                     Button(role: .destructive) {
                         showClearDataAlert = true
                     } label: {
-                        Label("清除所有数据", systemImage: "trash")
+                        Label("Clear All Data", systemImage: "trash")
                     }
                 }
-
-                // 关于
-                Section("关于") {
+                
+                Section("About") {
                     HStack {
-                        Text("版本")
+                        Text("Version")
                         Spacer()
-                        Text("1.0.0")
+                        Text(version)
                             .foregroundColor(.gray)
                     }
                 }
             }
-            .navigationTitle("设置")
-            #if os(iOS)
+            .navigationTitle("Setting")
+#if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") {
+                    Button("Done") {
                         dismiss()
                     }
                 }
             }
-            #endif
-            .alert("确认清除数据", isPresented: $showClearDataAlert) {
-                Button("取消", role: .cancel) {}
-                Button("清除", role: .destructive) {
-                    // TODO: 清除数据的逻辑
+#endif
+            .alert("Confirm to Clear Data", isPresented: $showClearDataAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Clear", role: .destructive) {
+                        // TODO: 清除数据的逻辑
                 }
             } message: {
-                Text("此操作将清除所有本地数据且无法恢复，是否继续？")
+                Text("This operation will clear all local data and it cannot be recovered. Do you want to continue?")
             }
         }
     }

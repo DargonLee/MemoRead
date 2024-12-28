@@ -43,7 +43,7 @@ private struct SidebarView: View {
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) {
             Button(action: { showSettings.toggle() }) {
-                Label("设置", systemImage: "gearshape")
+                Label("Setting", systemImage: "gearshape")
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(8)
             }
@@ -71,7 +71,7 @@ private struct MemoListView: View {
                     sortParameter: sortParameter,
                     sortOrder: sortOrder
                 )
-                .searchable(text: $searchText, prompt: "搜索")
+                .searchable(text: $searchText, prompt: "Search")
             }
             .navigationTitle("MemoRead")
             .toolbar {
