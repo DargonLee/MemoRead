@@ -41,6 +41,16 @@
         }
       }
     },
+    "Cancel" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
     "Clear" : {
       "localizations" : {
         "zh-Hans" : {
@@ -320,6 +330,12 @@
           }
         }
       }
+    },
+    "删除" : {
+
+    },
+    "复制" : {
+
     }
   },
   "version" : "1.0"

@@ -66,7 +66,7 @@ struct HomeView_iOS: View {
     }
 }
 
-#Preview {
+#Preview("English") {
     @Previewable @State var viewModel = HomeViewModel()
     let preview = Preview(ReadingCardModel.self)
     let cards = ReadingCardModel.sampleCards()
@@ -76,4 +76,17 @@ struct HomeView_iOS: View {
             .environment(viewModel)
             .modelContainer(preview.container)
 }
+
+
+//#Preview("Chinese") {
+//    @Previewable @State var viewModel = HomeViewModel()
+//    let preview = Preview(ReadingCardModel.self)
+//    let cards = ReadingCardModel.sampleCards()
+//    preview.addExamples(cards)
+//    
+//    return HomeView_iOS()
+//            .environment(viewModel)
+//            .modelContainer(preview.container)
+//            .environment(\.local, Locale(identifier: "zh-Hans"))
+//}
 #endif
