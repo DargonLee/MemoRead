@@ -10,7 +10,6 @@ import SwiftUI
 #if os(macOS)
 struct HomeView_macOS: View {
     @Environment(HomeViewModel.self) private var viewModel
-    @Environment(\.modelContext) private var modelContext
     
     // MARK: - Body
     var body: some View {

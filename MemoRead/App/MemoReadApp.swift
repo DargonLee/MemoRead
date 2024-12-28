@@ -10,6 +10,10 @@ import SwiftUI
 @main
 struct MemoReadApp: App {
     @State private var viewModel = HomeViewModel()
+    
+    init() {
+        print(URL.applicationSupportDirectory.path(percentEncoded: false))
+    }
 
     var body: some Scene {
         WindowGroup {

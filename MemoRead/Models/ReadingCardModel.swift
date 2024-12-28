@@ -35,19 +35,26 @@ final class ReadingCardModel {
         reminderAt: Date = Date.distantPast
     ) {
         self.content = content
-        self.type =
-            content.isValidURL
-            ? ReadingCardType.link.rawValue
-            : (content.isValidImageData
-                ? ReadingCardType.image.rawValue : ReadingCardType.text.rawValue)
+        self.type = ReadingCardModel.determineType(for: content)
         self.createdAt = createdAt
         self.reminderAt = reminderAt
         self.isCompleted = false
     }
 
-    func setCompleted() {
+    func markAsCompleted() {
+        guard !isCompleted else { return }
         self.isCompleted = true
         self.completedAt = Date()
+    }
+    
+    private static func determineType(for content: String) -> ReadingCardType.RawValue {
+        if content.isValidURL {
+            return ReadingCardType.link.rawValue
+        } else if content.isValidImageData {
+            return ReadingCardType.image.rawValue
+        } else {
+            return ReadingCardType.text.rawValue
+        }
     }
 }
 

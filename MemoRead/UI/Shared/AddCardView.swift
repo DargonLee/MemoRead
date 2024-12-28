@@ -10,6 +10,8 @@ import SwiftUI
 struct AddCardView: View {
     // MARK: - State
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var contxt
+
     @State private var content: String = ""
     @State private var showNotificationPicker = false
     @State private var selectedNotificationTime: Date = Date()
@@ -86,26 +88,25 @@ struct AddCardView: View {
         }
         .buttonStyle(BorderedButtonStyle())
     }
-    #if os(iOS)
-        private var navigationBarButtons: some ToolbarContent {
-            Group {
-
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("取消") {
-                        dismiss()
-                    }
+#if os(iOS)
+    private var navigationBarButtons: some ToolbarContent {
+        Group {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("取消") {
+                    dismiss()
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("保存") {
-                        // TODO: 保存卡片逻辑
-                        dismiss()
-                    }
-                    .disabled(content.isEmpty)
-                }
-
             }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("保存") {
+                    saveCard()
+                    dismiss()
+                }
+                .disabled(content.isEmpty)
+            }
+            
         }
-    #endif
+    }
+#endif
 
     private var notificationPickerView: some View {
         NavigationStack {
@@ -118,18 +119,23 @@ struct AddCardView: View {
             .padding()
             .navigationTitle("设置提醒")
             .toolbar {
-                #if os(iOS)
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("完成") {
-                            showNotificationPicker = false
-                        }
+#if os(iOS)
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("完成") {
+                        showNotificationPicker = false
                     }
-                #endif
+                }
+#endif
             }
         }
     }
 
     // MARK: - Actions
+    private func saveCard() {
+        let card = ReadingCardModel(content: content, reminderAt: selectedNotificationTime)
+        contxt.insert(card)
+    }
+    
     private func setTomorrowMorning() {
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
         let components = DateComponents(hour: 9, minute: 0)

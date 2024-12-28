@@ -11,7 +11,6 @@ import SwiftUI
 struct HomeView_iOS: View {
     // MARK: - Environment
     @Environment(HomeViewModel.self) private var viewModel
-    @Environment(\.modelContext) private var modelContxt
     
     // MARK: - State
     @State private var isSettingPresented: Bool = false

@@ -54,7 +54,7 @@ struct ReadingCardView: View {
     private func handleComplete() {
         item.content.copyToClipboard()
         isCompleted = true
-        item.isCompleted = true
+        item.markAsCompleted()
     }
 }
 

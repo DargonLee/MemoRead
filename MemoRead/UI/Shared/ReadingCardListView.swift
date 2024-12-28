@@ -10,7 +10,7 @@ import SwiftData
 
 struct ReadingCardListView: View {
     @Environment(HomeViewModel.self) private var viewModel
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.modelContext) private var context
     
     @Query private var readingCards: [ReadingCardModel]
     
@@ -40,7 +40,15 @@ struct ReadingCardListView: View {
         List {
             ForEach(readingCards) { item in
                 ReadingCardView(item: item)
+                    .listRowSeparator(.hidden)
+            }
+            .onDelete { indices in
+                indices.forEach { index in
+                    let card = readingCards[index]
+                    context.delete(card)
+                }
             }
         }
+        .listStyle(.plain)
     }
 }
