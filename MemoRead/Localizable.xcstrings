@@ -71,6 +71,16 @@
         }
       }
     },
+    "Clearing data..." : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清除数据…"
+          }
+        }
+      }
+    },
     "Completed" : {
       "localizations" : {
         "zh-Hans" : {
@@ -81,7 +91,7 @@
         }
       }
     },
-    "Confirm to Clear Data" : {
+    "Confirm Data Deletion" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -212,7 +222,14 @@
       }
     },
     "Save" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存"
+          }
+        }
+      }
     },
     "Search" : {
       "localizations" : {
@@ -274,17 +291,6 @@
         }
       }
     },
-    "Svae" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "保存"
-          }
-        }
-      }
-    },
     "Sync" : {
       "localizations" : {
         "zh-Hans" : {
@@ -295,12 +301,12 @@
         }
       }
     },
-    "This operation will clear all local data and it cannot be recovered. Do you want to continue?" : {
+    "This action will clear all local data, including:\n• All notes\n• All reminders\n• All app settings\n\nThis action cannot be undone. Continue?" : {
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "此操作将清除所有本地数据，且无法恢复。是否继续？"
+            "value" : "此操作将清除所有本地数据，包括：\\n• 所有笔记内容\\n• 所有提醒设置\\n• 所有应用设置\\n\\n此操作不可恢复，是否继续？"
           }
         }
       }
@@ -334,12 +340,6 @@
           }
         }
       }
-    },
-    "删除" : {
-
-    },
-    "复制" : {
-
     }
   },
   "version" : "1.0"

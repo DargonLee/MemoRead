@@ -1,24 +1,53 @@
-    //
-    //  SettingView.swift
-    //  MemoRead
-    //
-    //  Created by Harlans on 2024/12/26.
-    //
+//
+//  SettingView.swift
+//  MemoRead
+//
+//  Created by Harlans on 2024/12/26.
+//
 
 import SwiftUI
 
 struct SettingView: View {
-        // MARK: - State
+    // MARK: - State
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @AppStorage("enableAutoSync") private var enableAutoSync = true
     @AppStorage("enableNotification") private var enableNotification = true
     @AppStorage("enableDarkMode") private var enableDarkMode = false
     @State private var showClearDataAlert = false
     @State private var selectedAppearance: Appearance = .automatic
     @AppStorage("lastSyncTime") private var lastSyncTime = Date()
-    
+    @State private var isClearing = false
     var version: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+    }
+    
+    // MARK: - Actions
+    private func clearAllData() {
+        isClearing = true
+        NotificationManager.shared.removeAllNotifications()
+        do {
+            try modelContext.delete(model: ReadingCardModel.self)
+            UserDefaults.standard.removePersistentDomain(forName: Bundle.main.bundleIdentifier!)
+            try modelContext.save()
+        } catch {
+            print("Failed to clear data: \(error.localizedDescription)")
+        }
+        
+        isClearing = false
+        dismiss()
+    }
+    
+    // MARK: - Alert Content
+    private var clearDataAlert: Alert {
+        Alert(
+            title: Text("Confirm Data Deletion"),
+            message: Text("This action will clear all local data, including:\n• All notes\n• All reminders\n• All app settings\n\nThis action cannot be undone. Continue?"),
+            primaryButton: .destructive(Text("Clear")) {
+                clearAllData()
+            },
+            secondaryButton: .cancel(Text("Cancel"))
+        )
     }
     
     var body: some View {
@@ -36,9 +65,11 @@ struct SettingView: View {
                 Section("Notification") {
                     Toggle("Notification", isOn: $enableNotification)
                     if enableNotification {
-                        Text("After activation, you will receive reading reminders and synchronization completion notifications")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                        Text(
+                            "After activation, you will receive reading reminders and synchronization completion notifications"
+                        )
+                        .font(.caption)
+                        .foregroundColor(.gray)
                     }
                 }
                 
@@ -58,6 +89,7 @@ struct SettingView: View {
                     } label: {
                         Label("Clear All Data", systemImage: "trash")
                     }
+                    .disabled(isClearing)
                 }
                 
                 Section("About") {
@@ -80,13 +112,15 @@ struct SettingView: View {
                 }
             }
 #endif
-            .alert("Confirm to Clear Data", isPresented: $showClearDataAlert) {
-                Button("Cancel", role: .cancel) {}
-                Button("Clear", role: .destructive) {
-                        // TODO: 清除数据的逻辑
+            .alert(isPresented: $showClearDataAlert) {
+                clearDataAlert
+            }
+            .overlay {
+                if isClearing {
+                    ProgressView("Clearing data...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(.ultraThinMaterial)
                 }
-            } message: {
-                Text("This operation will clear all local data and it cannot be recovered. Do you want to continue?")
             }
         }
     }

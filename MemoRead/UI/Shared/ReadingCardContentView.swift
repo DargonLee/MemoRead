@@ -26,8 +26,8 @@ struct ReadingCardContentView: View {
         }
 #if os(macOS)
         .contextMenu {
-            Button("删除") {}
-            Button("复制") {}
+            Button("Delete") {}
+            Button("Copy") {}
         }
 #endif
     }
