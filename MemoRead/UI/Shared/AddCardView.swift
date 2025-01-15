@@ -27,11 +27,11 @@ struct AddCardView: View {
             .padding()
             .navigationTitle("Create Reading Card")
             .toolbar {
-                #if os(iOS)
-                    navigationBarButtons
-                #else
-                    macOSNavigationBarButtons
-                #endif
+#if os(iOS)
+                navigationBarButtons
+#else
+                macOSNavigationBarButtons
+#endif
             }
             .sheet(isPresented: $showNotificationPicker) {
                 notificationPickerView
@@ -43,11 +43,11 @@ struct AddCardView: View {
     private var contentEditorView: some View {
         TextEditor(text: $content)
             .font(.body)
-            #if os(macOS)
-                .frame(height: 150)
-            #else
-                .frame(maxHeight: .infinity)
-            #endif
+#if os(macOS)
+            .frame(height: 150)
+#else
+            .frame(maxHeight: .infinity)
+#endif
             .textEditorPadding()
             .cornerRadius(8)
     }
@@ -90,25 +90,25 @@ struct AddCardView: View {
         }
         .buttonStyle(BorderedButtonStyle())
     }
-    #if os(iOS)
-        private var navigationBarButtons: some ToolbarContent {
-            Group {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+#if os(iOS)
+    private var navigationBarButtons: some ToolbarContent {
+        Group {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Cancel") {
+                    dismiss()
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        saveCard()
-                        dismiss()
-                    }
-                    .disabled(content.isEmpty)
-                }
-
             }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Save") {
+                    saveCard()
+                    dismiss()
+                }
+                .disabled(content.isEmpty)
+            }
+            
         }
-    #endif
+    }
+#endif
 
     private var notificationPickerView: some View {
         NavigationStack {
@@ -121,13 +121,13 @@ struct AddCardView: View {
             .padding()
             .navigationTitle("Select Reminder Time")
             .toolbar {
-                #if os(iOS)
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Done") {
-                            showNotificationPicker = false
-                        }
+#if os(iOS)
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        showNotificationPicker = false
                     }
-                #endif
+                }
+#endif
             }
         }
     }
