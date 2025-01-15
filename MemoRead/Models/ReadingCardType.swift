@@ -6,6 +6,7 @@
     //
 
 import Foundation
+import SwiftUI
 
 enum ReadingCardSortParameter: String, Identifiable, CaseIterable {
     case all = "all"
@@ -85,6 +86,14 @@ enum Appearance: String, CaseIterable, Identifiable {
     
     var icon: String {
         Self.properties[self]?.icon ?? ""
+    }
+    
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .automatic: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
     }
 }
 

@@ -13,9 +13,8 @@ struct SettingView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage("enableAutoSync") private var enableAutoSync = true
     @AppStorage("enableNotification") private var enableNotification = true
-    @AppStorage("enableDarkMode") private var enableDarkMode = false
+    @AppStorage("selectedAppearance") private var selectedAppearance: Appearance = .automatic
     @State private var showClearDataAlert = false
-    @State private var selectedAppearance: Appearance = .automatic
     @AppStorage("lastSyncTime") private var lastSyncTime = Date()
     @State private var isClearing = false
     var version: String {
@@ -74,13 +73,16 @@ struct SettingView: View {
                 }
                 
                 Section("Appearance") {
-                    Picker("Appearance Mode", selection: $selectedAppearance) {
+                    Picker("Theme", selection: $selectedAppearance) {
                         ForEach(Appearance.allCases) { appearance in
                             Label(appearance.description, systemImage: appearance.icon)
                                 .tag(appearance)
                         }
                     }
                     .pickerStyle(.menu)
+                    .onChange(of: selectedAppearance) { _, newValue in
+                        UserDefaults.standard.set(newValue.rawValue, forKey: "selectedAppearance")
+                    }
                 }
                 
                 Section("Data Management") {

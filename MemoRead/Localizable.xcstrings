@@ -32,6 +32,7 @@
       }
     },
     "Appearance Mode" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -300,6 +301,9 @@
           }
         }
       }
+    },
+    "Theme" : {
+
     },
     "This action will clear all local data, including:\n• All notes\n• All reminders\n• All app settings\n\nThis action cannot be undone. Continue?" : {
       "localizations" : {

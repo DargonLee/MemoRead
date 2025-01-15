@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct HomeView: View {
+    @AppStorage("selectedAppearance") private var selectedAppearance: Appearance = .automatic
     var body: some View {
         VStack {
 #if os(iOS)
@@ -16,9 +17,7 @@ struct HomeView: View {
             HomeView_macOS()
 #endif
         }
-        .refreshable {
-            
-        }
+        .preferredColorScheme(selectedAppearance.colorScheme)
     }
 }
 
