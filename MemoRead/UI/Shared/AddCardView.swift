@@ -7,6 +7,13 @@
 
 import SwiftUI
 
+// MARK: - Time Option
+private enum TimeOption {
+    case tomorrowMorning
+    case tonight
+    case custom
+}
+
 struct AddCardView: View {
     // MARK: - State
     @Environment(\.dismiss) private var dismiss
@@ -15,6 +22,7 @@ struct AddCardView: View {
     @State private var content: String = ""
     @State private var showNotificationPicker = false
     @State private var selectedNotificationTime: Date = Date()
+    @State private var selectedTimeOption: TimeOption = .custom
 
     // MARK: - Body
     var body: some View {
@@ -27,11 +35,11 @@ struct AddCardView: View {
             .padding()
             .navigationTitle("Create Reading Card")
             .toolbar {
-#if os(iOS)
-                navigationBarButtons
-#else
-                macOSNavigationBarButtons
-#endif
+                #if os(iOS)
+                    navigationBarButtons
+                #else
+                    macOSNavigationBarButtons
+                #endif
             }
             .sheet(isPresented: $showNotificationPicker) {
                 notificationPickerView
@@ -43,11 +51,11 @@ struct AddCardView: View {
     private var contentEditorView: some View {
         TextEditor(text: $content)
             .font(.body)
-#if os(macOS)
-            .frame(height: 150)
-#else
-            .frame(maxHeight: .infinity)
-#endif
+            #if os(macOS)
+                .frame(height: 150)
+            #else
+                .frame(maxHeight: .infinity)
+            #endif
             .textEditorPadding()
             .cornerRadius(8)
     }
@@ -71,44 +79,53 @@ struct AddCardView: View {
     }
 
     private var tomorrowMorningButton: some View {
-        Button(action: setTomorrowMorning) {
+        Button(action: {
+            selectedTimeOption = .tomorrowMorning
+            setTomorrowMorning()
+        }) {
             Text("Tomorrow Morning")
         }
-        .buttonStyle(BorderedButtonStyle())
+        .buttonStyle(TimeButtonStyle(isSelected: selectedTimeOption == .tomorrowMorning))
     }
 
     private var tonightButton: some View {
-        Button(action: setTonight) {
+        Button(action: {
+            selectedTimeOption = .tonight
+            setTonight()
+        }) {
             Text("Tonight")
         }
-        .buttonStyle(BorderedButtonStyle())
+        .buttonStyle(TimeButtonStyle(isSelected: selectedTimeOption == .tonight))
     }
 
     private var customTimeButton: some View {
-        Button(action: { showNotificationPicker.toggle() }) {
+        Button(action: {
+            selectedTimeOption = .custom
+            showNotificationPicker.toggle()
+        }) {
             Text("Custom")
         }
-        .buttonStyle(BorderedButtonStyle())
+        .buttonStyle(TimeButtonStyle(isSelected: selectedTimeOption == .custom))
     }
-#if os(iOS)
-    private var navigationBarButtons: some ToolbarContent {
-        Group {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("Cancel") {
-                    dismiss()
+    #if os(iOS)
+        private var navigationBarButtons: some ToolbarContent {
+            Group {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
                 }
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Save") {
-                    saveCard()
-                    dismiss()
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        saveCard()
+                        dismiss()
+                    }
+                    .disabled(content.isEmpty)
                 }
-                .disabled(content.isEmpty)
+
             }
-            
         }
-    }
-#endif
+    #endif
 
     private var notificationPickerView: some View {
         NavigationStack {
@@ -121,41 +138,45 @@ struct AddCardView: View {
             .padding()
             .navigationTitle("Select Reminder Time")
             .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        showNotificationPicker = false
+                #if os(iOS)
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Done") {
+                            showNotificationPicker = false
+                        }
                     }
-                }
-#endif
+                #endif
             }
         }
     }
 
     // MARK: - macOS Navigation Bar Buttons
-#if os(macOS)
-    private var macOSNavigationBarButtons: some ToolbarContent {
-        Group {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    dismiss()
+    #if os(macOS)
+        private var macOSNavigationBarButtons: some ToolbarContent {
+            Group {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
                 }
-            }
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Save") {
-                    saveCard()
-                    dismiss()
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveCard()
+                        dismiss()
+                    }
+                    .disabled(content.isEmpty)
                 }
-                .disabled(content.isEmpty)
             }
         }
-    }
-#endif
+    #endif
 
     // MARK: - Actions
     private func saveCard() {
-        let card = ReadingCardModel(content: content, reminderAt: selectedNotificationTime)
+        let card = ReadingCardModel(
+            content: content,
+            reminderAt: selectedNotificationTime
+        )
         contxt.insert(card)
+        NotificationManager.shared.scheduleNotification(for: card)
     }
 
     private func setTomorrowMorning() {

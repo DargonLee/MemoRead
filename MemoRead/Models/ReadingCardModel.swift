@@ -18,6 +18,7 @@ import SwiftUI
 @Model
 final class ReadingCardModel {
     // 基本信息
+    let id: UUID
     var content: String
     var type: ReadingCardType.RawValue
 
@@ -30,10 +31,12 @@ final class ReadingCardModel {
     var isCompleted: Bool
 
     init(
+        id: UUID = UUID(),
         content: String,
         createdAt: Date = Date(),
         reminderAt: Date = Date.distantPast
     ) {
+        self.id = id
         self.content = content
         self.type = ReadingCardModel.determineType(for: content)
         self.createdAt = createdAt
