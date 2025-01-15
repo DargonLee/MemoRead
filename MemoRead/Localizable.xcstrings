@@ -211,6 +211,9 @@
         }
       }
     },
+    "Save" : {
+
+    },
     "Search" : {
       "localizations" : {
         "zh-Hans" : {
@@ -272,6 +275,7 @@
       }
     },
     "Svae" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

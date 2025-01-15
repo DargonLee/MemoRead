@@ -61,7 +61,7 @@ private struct MemoListView: View {
     @Binding var sortParameter: ReadingCardSortParameter
     @Binding var sortOrder: ReadingCardSortOrder
     
-    @State private var showAddSheet: Bool = true
+    @State private var showAddSheet: Bool = false
     
     var body: some View {
         ZStack {

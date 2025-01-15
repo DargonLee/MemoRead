@@ -29,6 +29,8 @@ struct AddCardView: View {
             .toolbar {
                 #if os(iOS)
                     navigationBarButtons
+                #else
+                    macOSNavigationBarButtons
                 #endif
             }
             .sheet(isPresented: $showNotificationPicker) {
@@ -88,25 +90,25 @@ struct AddCardView: View {
         }
         .buttonStyle(BorderedButtonStyle())
     }
-#if os(iOS)
-    private var navigationBarButtons: some ToolbarContent {
-        Group {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("Cancel") {
-                    dismiss()
+    #if os(iOS)
+        private var navigationBarButtons: some ToolbarContent {
+            Group {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
                 }
-            }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Svae") {
-                    saveCard()
-                    dismiss()
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        saveCard()
+                        dismiss()
+                    }
+                    .disabled(content.isEmpty)
                 }
-                .disabled(content.isEmpty)
+
             }
-            
         }
-    }
-#endif
+    #endif
 
     private var notificationPickerView: some View {
         NavigationStack {
@@ -119,23 +121,43 @@ struct AddCardView: View {
             .padding()
             .navigationTitle("Select Reminder Time")
             .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        showNotificationPicker = false
+                #if os(iOS)
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Done") {
+                            showNotificationPicker = false
+                        }
                     }
-                }
-#endif
+                #endif
             }
         }
     }
+
+    // MARK: - macOS Navigation Bar Buttons
+#if os(macOS)
+    private var macOSNavigationBarButtons: some ToolbarContent {
+        Group {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") {
+                    saveCard()
+                    dismiss()
+                }
+                .disabled(content.isEmpty)
+            }
+        }
+    }
+#endif
 
     // MARK: - Actions
     private func saveCard() {
         let card = ReadingCardModel(content: content, reminderAt: selectedNotificationTime)
         contxt.insert(card)
     }
-    
+
     private func setTomorrowMorning() {
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
         let components = DateComponents(hour: 9, minute: 0)
