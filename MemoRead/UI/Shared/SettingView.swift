@@ -13,7 +13,7 @@ struct SettingView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage("enableAutoSync") private var enableAutoSync = true
     @AppStorage("enableNotification") private var enableNotification = true
-    @AppStorage("selectedAppearance") private var selectedAppearance: Appearance = .automatic
+    @AppStorage("app_appearance") private var selectedAppearance: Appearance = .automatic
     @State private var showClearDataAlert = false
     @AppStorage("lastSyncTime") private var lastSyncTime = Date()
     @State private var isClearing = false
@@ -81,7 +81,7 @@ struct SettingView: View {
                     }
                     .pickerStyle(.menu)
                     .onChange(of: selectedAppearance) { _, newValue in
-                        UserDefaults.standard.set(newValue.rawValue, forKey: "selectedAppearance")
+                        selectedAppearance = newValue
                     }
                 }
                 
@@ -125,6 +125,7 @@ struct SettingView: View {
                 }
             }
         }
+        .preferredColorScheme(selectedAppearance.colorScheme)
     }
 }
 
