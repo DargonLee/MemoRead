@@ -10,9 +10,22 @@
 		18E5D2192D1ADAC9003664EC /* MemoRead.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MemoRead.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		18914E272D37A13200DAFB35 /* Exceptions for "MemoRead" folder in "MemoRead" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 18E5D2182D1ADAC9003664EC /* MemoRead */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		18E5D21B2D1ADAC9003664EC /* MemoRead */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				18914E272D37A13200DAFB35 /* Exceptions for "MemoRead" folder in "MemoRead" target */,
+			);
 			path = MemoRead;
 			sourceTree = "<group>";
 		};
@@ -255,6 +268,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MemoRead/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = MemoRead;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -296,6 +310,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MemoRead/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = MemoRead;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

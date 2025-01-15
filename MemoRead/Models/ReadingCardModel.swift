@@ -18,17 +18,17 @@ import SwiftUI
 @Model
 final class ReadingCardModel {
     // 基本信息
-    let id: UUID
-    var content: String
-    var type: ReadingCardType.RawValue
+    var id: UUID = UUID()
+    var content: String = ""
+    var type: ReadingCardType.RawValue = ReadingCardType.text.rawValue
 
     // 时间相关
-    var createdAt: Date
+    var createdAt: Date = Date.distantFuture
     var reminderAt: Date?
     var completedAt: Date?
 
     // 状态
-    var isCompleted: Bool
+    var isCompleted: Bool = false
 
     init(
         id: UUID = UUID(),
@@ -42,12 +42,6 @@ final class ReadingCardModel {
         self.createdAt = createdAt
         self.reminderAt = reminderAt
         self.isCompleted = false
-    }
-
-    func markAsCompleted() {
-        guard !isCompleted else { return }
-        self.isCompleted = true
-        self.completedAt = Date()
     }
     
     private static func determineType(for content: String) -> ReadingCardType.RawValue {

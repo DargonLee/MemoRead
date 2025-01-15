@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ReadingCardView: View {
+    @Environment(\.modelContext) private var modelContext
     let item: ReadingCardModel
     @State private var isCompleted: Bool
     private var type: ReadingCardModel.ReadingCardType
@@ -52,9 +53,24 @@ struct ReadingCardView: View {
 
     // MARK: - Actions
     private func handleComplete() {
+        // 复制内容到剪贴板
         item.content.copyToClipboard()
+
+        // 更新本地状态
         isCompleted = true
-        item.markAsCompleted()
+
+        // 更新数据模型
+        item.isCompleted = true
+        item.completedAt = Date()
+
+        // 保存到数据库
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save completion status: \(error.localizedDescription)")
+            // 如果保存失败，回滚本地状态
+            isCompleted = false
+        }
     }
 }
 
