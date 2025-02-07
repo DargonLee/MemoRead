@@ -18,12 +18,12 @@ struct AddCardView: View {
     // MARK: - State
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var contxt
-
+    
     @State private var content: String = ""
     @State private var showNotificationPicker = false
     @State private var selectedNotificationTime: Date = Date()
     @State private var selectedTimeOption: TimeOption = .custom
-
+    
     // MARK: - Body
     var body: some View {
         NavigationStack {
@@ -35,37 +35,37 @@ struct AddCardView: View {
             .padding()
             .navigationTitle("Create Reading Card")
             .toolbar {
-                #if os(iOS)
-                    navigationBarButtons
-                #else
-                    macOSNavigationBarButtons
-                #endif
+#if os(iOS)
+                navigationBarButtons
+#else
+                macOSNavigationBarButtons
+#endif
             }
             .sheet(isPresented: $showNotificationPicker) {
                 notificationPickerView
             }
         }
     }
-
+    
     // MARK: - Views
     private var contentEditorView: some View {
         TextEditor(text: $content)
             .font(.body)
-            #if os(macOS)
-                .frame(height: 150)
-            #else
-                .frame(maxHeight: .infinity)
-            #endif
+#if os(macOS)
+            .frame(height: 150)
+#else
+            .frame(maxHeight: .infinity)
+#endif
             .textEditorPadding()
             .cornerRadius(8)
     }
-
+    
     private var notificationTimeView: some View {
         Text(selectedNotificationTime.formatted(date: .abbreviated, time: .shortened))
             .foregroundColor(.gray)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
-
+    
     private var notificationButtonsView: some View {
         HStack(spacing: 12) {
             Image(systemName: "bell")
@@ -77,7 +77,7 @@ struct AddCardView: View {
             Spacer()
         }
     }
-
+    
     private var tomorrowMorningButton: some View {
         Button(action: {
             selectedTimeOption = .tomorrowMorning
@@ -87,7 +87,7 @@ struct AddCardView: View {
         }
         .buttonStyle(TimeButtonStyle(isSelected: selectedTimeOption == .tomorrowMorning))
     }
-
+    
     private var tonightButton: some View {
         Button(action: {
             selectedTimeOption = .tonight
@@ -97,7 +97,7 @@ struct AddCardView: View {
         }
         .buttonStyle(TimeButtonStyle(isSelected: selectedTimeOption == .tonight))
     }
-
+    
     private var customTimeButton: some View {
         Button(action: {
             selectedTimeOption = .custom
@@ -107,26 +107,26 @@ struct AddCardView: View {
         }
         .buttonStyle(TimeButtonStyle(isSelected: selectedTimeOption == .custom))
     }
-    #if os(iOS)
-        private var navigationBarButtons: some ToolbarContent {
-            Group {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+#if os(iOS)
+    private var navigationBarButtons: some ToolbarContent {
+        Group {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Cancel") {
+                    dismiss()
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        saveCard()
-                        dismiss()
-                    }
-                    .disabled(content.isEmpty)
-                }
-
             }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Save") {
+                    saveCard()
+                    dismiss()
+                }
+                .disabled(content.isEmpty)
+            }
+            
         }
-    #endif
-
+    }
+#endif
+    
     private var notificationPickerView: some View {
         NavigationStack {
             DatePicker(
@@ -138,37 +138,37 @@ struct AddCardView: View {
             .padding()
             .navigationTitle("Select Reminder Time")
             .toolbar {
-                #if os(iOS)
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Done") {
-                            showNotificationPicker = false
-                        }
+#if os(iOS)
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        showNotificationPicker = false
                     }
-                #endif
+                }
+#endif
             }
         }
     }
-
+    
     // MARK: - macOS Navigation Bar Buttons
-    #if os(macOS)
-        private var macOSNavigationBarButtons: some ToolbarContent {
-            Group {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        saveCard()
-                        dismiss()
-                    }
-                    .disabled(content.isEmpty)
+#if os(macOS)
+    private var macOSNavigationBarButtons: some ToolbarContent {
+        Group {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
                 }
             }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") {
+                    saveCard()
+                    dismiss()
+                }
+                .disabled(content.isEmpty)
+            }
         }
-    #endif
-
+    }
+#endif
+    
     // MARK: - Actions
     private func saveCard() {
         let card = ReadingCardModel(
@@ -178,28 +178,28 @@ struct AddCardView: View {
         contxt.insert(card)
         NotificationManager.shared.scheduleNotification(for: card)
     }
-
+    
     private func setTomorrowMorning() {
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
         let components = DateComponents(hour: 9, minute: 0)
         selectedNotificationTime =
-            Calendar.current.date(
-                bySettingHour: components.hour!,
-                minute: components.minute!,
-                second: 0,
-                of: tomorrow
-            ) ?? Date()
+        Calendar.current.date(
+            bySettingHour: components.hour!,
+            minute: components.minute!,
+            second: 0,
+            of: tomorrow
+        ) ?? Date()
     }
-
+    
     private func setTonight() {
         let components = DateComponents(hour: 20, minute: 0)
         selectedNotificationTime =
-            Calendar.current.date(
-                bySettingHour: components.hour!,
-                minute: components.minute!,
-                second: 0,
-                of: Date()
-            ) ?? Date()
+        Calendar.current.date(
+            bySettingHour: components.hour!,
+            minute: components.minute!,
+            second: 0,
+            of: Date()
+        ) ?? Date()
     }
 }
 

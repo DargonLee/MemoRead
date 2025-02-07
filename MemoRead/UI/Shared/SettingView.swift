@@ -7,6 +7,25 @@
 
 import SwiftUI
 
+// MARK: - Setting Section Model
+struct SettingSection: Identifiable, Hashable {
+    let id: String
+    let title: String
+    let icon: String
+    
+    static let allSections: [SettingSection] = [
+        .init(id: "sync", title: "Sync", icon: "arrow.triangle.2.circlepath"),
+        .init(id: "notification", title: "Notification", icon: "bell"),
+        .init(id: "appearance", title: "Appearance", icon: "paintbrush"),
+        .init(id: "data", title: "Data Management", icon: "externaldrive"),
+        .init(id: "about", title: "About", icon: "info.circle")
+    ]
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
 struct SettingView: View {
     // MARK: - State
     @Environment(\.dismiss) private var dismiss
@@ -18,8 +37,177 @@ struct SettingView: View {
     @AppStorage("lastSyncTime") private var lastSyncTime = Date()
     @State private var isClearing = false
     
+#if os(macOS)
+    @State private var selectedSection: SettingSection? = SettingSection.allSections.first
+    private let minWidth: CGFloat = 600
+    private let minHeight: CGFloat = 400
+    private let sidebarWidth: CGFloat = 200
+#endif
+    
     var version: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+    }
+    
+    // MARK: - View Body
+    var body: some View {
+#if os(iOS)
+        NavigationStack {
+            mainContentiOS
+                .navigationTitle("Settings")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Done") {
+                            dismiss()
+                        }
+                    }
+                }
+        }
+#else
+        Group {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    ForEach(SettingSection.allSections) { section in
+                        VStack(alignment: .leading, spacing: 16) {
+                            Label(section.title, systemImage: section.icon)
+                                .font(.headline)
+                            
+                            sectionContent(for: section)
+                                .padding(.leading)
+                        }
+                        
+                        if section != SettingSection.allSections.last {
+                            Divider()
+                        }
+                    }
+                }
+                .padding()
+            }
+            .frame(minWidth: minWidth, minHeight: minHeight)
+            .alert(isPresented: $showClearDataAlert) {
+                clearDataAlert
+            }
+        }
+#endif
+    }
+    
+    // MARK: - iOS Main Content
+    private var mainContentiOS: some View {
+        Form {
+            ForEach(SettingSection.allSections) { section in
+                Section(section.title) {
+                    sectionContent(for: section)
+                }
+            }
+        }
+        .alert(isPresented: $showClearDataAlert) {
+            clearDataAlert
+        }
+    }
+    
+    // MARK: - Section Content
+    @ViewBuilder
+    private func sectionContent(for section: SettingSection) -> some View {
+        switch section.id {
+        case "sync":
+            syncSection
+        case "notification":
+            notificationSection
+        case "appearance":
+            appearanceSection
+        case "data":
+            dataSection
+        case "about":
+            aboutSection
+        default:
+            EmptyView()
+        }
+    }
+    
+    // MARK: - Section Views
+    private var syncSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Toggle("iCloud Sync", isOn: $enableAutoSync)
+#if os(macOS)
+                .toggleStyle(.switch)
+#endif
+            
+            if enableAutoSync {
+                Text("Last sync time: \(String(describing: lastSyncTime.timeAgoDisplay))")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+    
+    private var notificationSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Toggle("Enable Notifications", isOn: $enableNotification)
+#if os(macOS)
+                .toggleStyle(.switch)
+#endif
+            
+            if enableNotification {
+                Text("After activation, you will receive reading reminders and synchronization completion notifications")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+    
+    private var appearanceSection: some View {
+        Picker("Theme", selection: $selectedAppearance) {
+            ForEach(Appearance.allCases) { appearance in
+                Label(appearance.description, systemImage: appearance.icon)
+                    .tag(appearance)
+            }
+        }
+#if os(macOS)
+        .pickerStyle(.inline)
+        .labelsHidden()
+#else
+        .pickerStyle(.menu)
+#endif
+    }
+    
+    private var dataSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button(role: .destructive) {
+                showClearDataAlert = true
+            } label: {
+                Label("Clear All Data", systemImage: "trash")
+            }
+#if os(macOS)
+            .buttonStyle(.borderless)
+#endif
+            .disabled(isClearing)
+            
+            if isClearing {
+                ProgressView("Clearing data...")
+                    .progressViewStyle(.circular)
+            }
+        }
+    }
+    
+    private var aboutSection: some View {
+        HStack {
+            Text("Version")
+            Spacer()
+            Text(version)
+                .foregroundColor(.secondary)
+        }
+    }
+    
+    // MARK: - Alert
+    private var clearDataAlert: Alert {
+        Alert(
+            title: Text("Confirm Data Deletion"),
+            message: Text("This action will clear all local data, including:\n• All notes\n• All reminders\n• All app settings\n\nThis action cannot be undone. Continue?"),
+            primaryButton: .destructive(Text("Clear")) {
+                clearAllData()
+            },
+            secondaryButton: .cancel(Text("Cancel"))
+        )
     }
     
     // MARK: - Actions
@@ -36,119 +224,6 @@ struct SettingView: View {
         
         isClearing = false
         dismiss()
-    }
-    
-    // MARK: - Alert Content
-    private var clearDataAlert: Alert {
-        Alert(
-            title: Text("Confirm Data Deletion"),
-            message: Text("This action will clear all local data, including:\n• All notes\n• All reminders\n• All app settings\n\nThis action cannot be undone. Continue?"),
-            primaryButton: .destructive(Text("Clear")) {
-                clearAllData()
-            },
-            secondaryButton: .cancel(Text("Cancel"))
-        )
-    }
-    
-    // MARK: - Platform-specific Properties
-#if os(macOS)
-    private var formWidth: CGFloat = 500
-#endif
-    
-    // MARK: - View Body
-    var body: some View {
-#if os(iOS)
-        NavigationStack {
-            mainContent
-                .navigationTitle("Setting")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Done") {
-                            dismiss()
-                        }
-                    }
-                }
-        }
-#else
-        Group {
-            mainContent
-                .frame(width: formWidth)
-                .padding()
-                .navigationTitle("Setting")
-        }
-#endif
-    }
-    
-    // MARK: - Main Content
-    private var mainContent: some View {
-        Form {
-            Section("Sync") {
-                Toggle("iCloud Sync", isOn: $enableAutoSync)
-                if enableAutoSync {
-                    Text("Last sync time: \(String(describing: lastSyncTime.timeAgoDisplay))")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                }
-            }
-            
-            Section("Notification") {
-                Toggle("Notification", isOn: $enableNotification)
-                if enableNotification {
-                    Text(
-                        "After activation, you will receive reading reminders and synchronization completion notifications"
-                    )
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                }
-            }
-            
-            Section("Appearance") {
-                Picker("", selection: $selectedAppearance) {
-                    ForEach(Appearance.allCases) { appearance in
-                        Label(appearance.description, systemImage: appearance.icon)
-                            .tag(appearance)
-                    }
-                }
-#if os(macOS)
-                .pickerStyle(.inline)
-#else
-                .pickerStyle(.menu)
-#endif
-                .onChange(of: selectedAppearance) { _, newValue in
-                    selectedAppearance = newValue
-                }
-            }
-            
-            Section("Data Management") {
-                Button(role: .destructive) {
-                    showClearDataAlert = true
-                } label: {
-                    Label("Clear All Data", systemImage: "trash")
-                }
-                .disabled(isClearing)
-            }
-            
-            Section("About") {
-                HStack {
-                    Text("Version")
-                    Spacer()
-                    Text(version)
-                        .foregroundColor(.gray)
-                }
-            }
-        }
-        .alert(isPresented: $showClearDataAlert) {
-            clearDataAlert
-        }
-        .overlay {
-            if isClearing {
-                ProgressView("Clearing data...")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(.ultraThinMaterial)
-            }
-        }
-        .preferredColorScheme(selectedAppearance.colorScheme)
     }
 }
 
