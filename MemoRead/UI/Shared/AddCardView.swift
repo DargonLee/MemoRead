@@ -19,6 +19,8 @@ struct AddCardView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var contxt
     
+    @AppStorage("enableNotification") private var enableNotification = true
+    
     @State private var content: String = ""
     @State private var showNotificationPicker = false
     @State private var selectedNotificationTime: Date = Date()
@@ -176,7 +178,10 @@ struct AddCardView: View {
             reminderAt: selectedNotificationTime
         )
         contxt.insert(card)
-        NotificationManager.shared.scheduleNotification(for: card)
+        
+        if enableNotification {
+            NotificationManager.shared.scheduleNotification(for: card)
+        }
     }
     
     private func setTomorrowMorning() {
