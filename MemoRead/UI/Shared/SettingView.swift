@@ -17,6 +17,7 @@ struct SettingView: View {
     @State private var showClearDataAlert = false
     @AppStorage("lastSyncTime") private var lastSyncTime = Date()
     @State private var isClearing = false
+    
     var version: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
     }
@@ -49,80 +50,102 @@ struct SettingView: View {
         )
     }
     
+    // MARK: - Platform-specific Properties
+#if os(macOS)
+    private var formWidth: CGFloat = 500
+#endif
+    
+    // MARK: - View Body
     var body: some View {
+#if os(iOS)
         NavigationStack {
-            Form {
-                Section("Sync") {
-                    Toggle("iCloud Sync", isOn: $enableAutoSync)
-                    if enableAutoSync {
-                        Text("Last sync time: \(String(describing: lastSyncTime.timeAgoDisplay))")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
-                }
-                
-                Section("Notification") {
-                    Toggle("Notification", isOn: $enableNotification)
-                    if enableNotification {
-                        Text(
-                            "After activation, you will receive reading reminders and synchronization completion notifications"
-                        )
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    }
-                }
-                
-                Section("Appearance") {
-                    Picker("Theme", selection: $selectedAppearance) {
-                        ForEach(Appearance.allCases) { appearance in
-                            Label(appearance.description, systemImage: appearance.icon)
-                                .tag(appearance)
+            mainContent
+                .navigationTitle("Setting")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Done") {
+                            dismiss()
                         }
                     }
-                    .pickerStyle(.menu)
-                    .onChange(of: selectedAppearance) { _, newValue in
-                        selectedAppearance = newValue
-                    }
                 }
-                
-                Section("Data Management") {
-                    Button(role: .destructive) {
-                        showClearDataAlert = true
-                    } label: {
-                        Label("Clear All Data", systemImage: "trash")
-                    }
-                    .disabled(isClearing)
-                }
-                
-                Section("About") {
-                    HStack {
-                        Text("Version")
-                        Spacer()
-                        Text(version)
-                            .foregroundColor(.gray)
-                    }
-                }
-            }
-            .navigationTitle("Setting")
-#if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
+        }
+#else
+        Group {
+            mainContent
+                .frame(width: formWidth)
+                .padding()
+                .navigationTitle("Setting")
+        }
 #endif
-            .alert(isPresented: $showClearDataAlert) {
-                clearDataAlert
-            }
-            .overlay {
-                if isClearing {
-                    ProgressView("Clearing data...")
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(.ultraThinMaterial)
+    }
+    
+    // MARK: - Main Content
+    private var mainContent: some View {
+        Form {
+            Section("Sync") {
+                Toggle("iCloud Sync", isOn: $enableAutoSync)
+                if enableAutoSync {
+                    Text("Last sync time: \(String(describing: lastSyncTime.timeAgoDisplay))")
+                        .font(.caption)
+                        .foregroundColor(.gray)
                 }
+            }
+            
+            Section("Notification") {
+                Toggle("Notification", isOn: $enableNotification)
+                if enableNotification {
+                    Text(
+                        "After activation, you will receive reading reminders and synchronization completion notifications"
+                    )
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                }
+            }
+            
+            Section("Appearance") {
+                Picker("", selection: $selectedAppearance) {
+                    ForEach(Appearance.allCases) { appearance in
+                        Label(appearance.description, systemImage: appearance.icon)
+                            .tag(appearance)
+                    }
+                }
+#if os(macOS)
+                .pickerStyle(.inline)
+#else
+                .pickerStyle(.menu)
+#endif
+                .onChange(of: selectedAppearance) { _, newValue in
+                    selectedAppearance = newValue
+                }
+            }
+            
+            Section("Data Management") {
+                Button(role: .destructive) {
+                    showClearDataAlert = true
+                } label: {
+                    Label("Clear All Data", systemImage: "trash")
+                }
+                .disabled(isClearing)
+            }
+            
+            Section("About") {
+                HStack {
+                    Text("Version")
+                    Spacer()
+                    Text(version)
+                        .foregroundColor(.gray)
+                }
+            }
+        }
+        .alert(isPresented: $showClearDataAlert) {
+            clearDataAlert
+        }
+        .overlay {
+            if isClearing {
+                ProgressView("Clearing data...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(.ultraThinMaterial)
             }
         }
         .preferredColorScheme(selectedAppearance.colorScheme)
