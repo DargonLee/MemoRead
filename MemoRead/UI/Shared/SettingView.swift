@@ -55,43 +55,35 @@ struct SettingView: View {
             mainContentiOS
                 .navigationTitle("Settings")
                 .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Done") {
-                            dismiss()
-                        }
-                    }
-                }
+                .toolbar { dismissButton }
         }
 #else
-        Group {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    ForEach(SettingSection.allSections) { section in
-                        VStack(alignment: .leading, spacing: 16) {
-                            Label(section.title, systemImage: section.icon)
-                                .font(.headline)
-                            
-                            sectionContent(for: section)
-                                .padding(.leading)
-                        }
-                        
-                        if section != SettingSection.allSections.last {
-                            Divider()
-                        }
-                    }
-                }
-                .padding()
-            }
-            .frame(minWidth: minWidth, minHeight: minHeight)
+        NavigationStack {
+            mainContentmacOS
             .alert(isPresented: $showClearDataAlert) {
                 clearDataAlert
             }
+            .toolbar { dismissButton }
         }
 #endif
     }
     
     // MARK: - iOS Main Content
+    private var dismissButton: some ToolbarContent {
+#if os(iOS)
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button("Done") { dismiss() }
+        }
+#else
+        ToolbarItem(placement: .cancellationAction) {
+            Button("Done") { dismiss() }
+        }
+#endif
+    }
+}
+
+// MARK: - Content Views
+private extension SettingView {
     private var mainContentiOS: some View {
         Form {
             ForEach(SettingSection.allSections) { section in
@@ -104,6 +96,32 @@ struct SettingView: View {
             clearDataAlert
         }
     }
+    
+    private var mainContentmacOS: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                ForEach(SettingSection.allSections) { section in
+                    VStack(alignment: .leading, spacing: 16) {
+                        Label(section.title, systemImage: section.icon)
+                            .font(.headline)
+                        sectionContent(for: section)
+                            .padding(.leading)
+                    }
+                    
+                    if section != SettingSection.allSections.last {
+                        Divider()
+                    }
+                }
+            }
+            .padding()
+        }
+#if os(macOS)
+        .frame(minWidth: minWidth, minHeight: minHeight)
+#endif
+    }
+}
+
+private extension SettingView {
     
     // MARK: - Section Content
     @ViewBuilder

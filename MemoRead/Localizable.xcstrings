@@ -158,6 +158,9 @@
         }
       }
     },
+    "Enable Notifications" : {
+
+    },
     "iCloud Sync" : {
       "localizations" : {
         "zh-Hans" : {
