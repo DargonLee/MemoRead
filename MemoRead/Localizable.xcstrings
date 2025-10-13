@@ -31,17 +31,6 @@
         }
       }
     },
-    "Appearance Mode" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "外观模式"
-          }
-        }
-      }
-    },
     "Cancel" : {
       "localizations" : {
         "zh-Hans" : {
@@ -103,7 +92,14 @@
       }
     },
     "Copy" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制"
+          }
+        }
+      }
     },
     "Create Reading Card" : {
       "localizations" : {
@@ -136,7 +132,14 @@
       }
     },
     "Delete" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除"
+          }
+        }
+      }
     },
     "Done" : {
       "localizations" : {
@@ -159,7 +162,14 @@
       }
     },
     "Enable Notifications" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启通知"
+          }
+        }
+      }
     },
     "iCloud Sync" : {
       "localizations" : {
@@ -312,7 +322,14 @@
       }
     },
     "Theme" : {
-
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "主题"
+          }
+        }
+      }
     },
     "This action will clear all local data, including:\n• All notes\n• All reminders\n• All app settings\n\nThis action cannot be undone. Continue?" : {
       "localizations" : {
