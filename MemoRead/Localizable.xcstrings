@@ -4,6 +4,9 @@
     "- %@" : {
 
     },
+    "(Default)" : {
+
+    },
     "About" : {
       "localizations" : {
         "zh-Hans" : {
@@ -13,6 +16,9 @@
           }
         }
       }
+    },
+    "Add AI Model" : {
+
     },
     "After activation, you will receive reading reminders and synchronization completion notifications" : {
       "localizations" : {
@@ -24,7 +30,19 @@
         }
       }
     },
+    "AI Model" : {
+
+    },
+    "AI Models" : {
+
+    },
     "AI总结" : {
+
+    },
+    "API Configuration" : {
+
+    },
+    "API Key" : {
 
     },
     "Appearance" : {
@@ -38,6 +56,9 @@
       }
     },
     "Auto-tag" : {
+
+    },
+    "Base URL" : {
 
     },
     "Cancel" : {
@@ -151,6 +172,9 @@
         }
       }
     },
+    "Delete Model" : {
+
+    },
     "Done" : {
       "localizations" : {
         "zh-Hans" : {
@@ -160,6 +184,9 @@
           }
         }
       }
+    },
+    "Edit AI Model" : {
+
     },
     "Empty" : {
       "localizations" : {
@@ -224,7 +251,16 @@
         }
       }
     },
+    "Model Information" : {
+
+    },
+    "Name" : {
+
+    },
     "New Note" : {
+
+    },
+    "Not Set" : {
 
     },
     "Notification" : {
@@ -236,6 +272,9 @@
           }
         }
       }
+    },
+    "Provider" : {
+
     },
     "Refresh" : {
       "localizations" : {
@@ -286,6 +325,9 @@
           }
         }
       }
+    },
+    "Set as Default" : {
+
     },
     "Setting" : {
       "localizations" : {
@@ -339,6 +381,9 @@
           }
         }
       }
+    },
+    "Test" : {
+
     },
     "Theme" : {
       "localizations" : {

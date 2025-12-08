@@ -16,6 +16,7 @@ struct SettingSection: Identifiable, Hashable {
     static let allSections: [SettingSection] = [
         .init(id: "sync", title: "Sync", icon: "arrow.triangle.2.circlepath"),
         .init(id: "notification", title: "Notification", icon: "bell"),
+        .init(id: "ai_model", title: "AI Model", icon: "brain.head.profile"),
         .init(id: "appearance", title: "Appearance", icon: "paintbrush"),
         .init(id: "data", title: "Data Management", icon: "externaldrive"),
         .init(id: "about", title: "About", icon: "info.circle")
@@ -36,6 +37,7 @@ struct SettingView: View {
     @State private var showClearDataAlert = false
     @AppStorage("lastSyncTime") private var lastSyncTime = Date()
     @State private var isClearing = false
+    @State private var showAIModelList = false
     
 #if os(macOS)
     @State private var selectedSection: SettingSection? = SettingSection.allSections.first
@@ -56,6 +58,9 @@ struct SettingView: View {
                 .navigationTitle("Settings")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar { dismissButton }
+                .sheet(isPresented: $showAIModelList) {
+                    AIModelListView()
+                }
         }
 #else
         NavigationStack {
@@ -64,6 +69,9 @@ struct SettingView: View {
                 clearDataAlert
             }
             .toolbar { dismissButton }
+            .sheet(isPresented: $showAIModelList) {
+                AIModelListView()
+            }
         }
 #endif
     }
@@ -131,6 +139,8 @@ private extension SettingView {
             syncSection
         case "notification":
             notificationSection
+        case "ai_model":
+            aiModelSection
         case "appearance":
             appearanceSection
         case "data":
@@ -171,6 +181,37 @@ private extension SettingView {
                     .foregroundColor(.secondary)
             }
         }
+    }
+    
+    private var aiModelSection: some View {
+        Button(action: {
+            showAIModelList = true
+        }) {
+            HStack {
+                Label("AI Model", systemImage: "brain.head.profile")
+                    .foregroundColor(.primary)
+                Spacer()
+                if let defaultModel = AIModelService.shared.defaultModel {
+                    Text(defaultModel.name)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("Not Set")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+#if os(iOS)
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+#endif
+            }
+        }
+#if os(iOS)
+        .buttonStyle(.plain)
+#else
+        .buttonStyle(.plain)
+#endif
     }
     
     private var appearanceSection: some View {
