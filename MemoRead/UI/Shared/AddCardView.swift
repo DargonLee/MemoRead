@@ -35,23 +35,34 @@ struct AddCardView: View {
     @State private var selectedImage: UIImage?
 #endif
     
+    // MARK: - Computed Properties
+    private var hasValidContent: Bool {
+#if os(iOS)
+        return !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || selectedImage != nil
+#else
+        return !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+#endif
+    }
+    
     // MARK: - Body
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
-                topHandle
-                header
+            ScrollView {
+                VStack(spacing: 20) {
+                    topHandle
+                    header
 #if os(iOS)
-                if selectedImage != nil {
-                    imagePreviewView
-                }
+                    if selectedImage != nil {
+                        imagePreviewView
+                    }
 #endif
-                contentEditorView
-                notificationTimeView
-                bottomToolbar
+                    contentEditorView
+                    notificationTimeView
+                    bottomToolbar
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 20)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 20)
             .background(AddCardStyle.background)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .sheet(isPresented: $showNotificationPicker) {
@@ -102,11 +113,11 @@ struct AddCardView: View {
                 saveCard()
                 dismiss()
             }
-            .disabled(content.isEmpty && selectedImage == nil)
-            .foregroundColor((content.isEmpty && selectedImage == nil) ? .gray.opacity(0.6) : AddCardStyle.accent)
+            .disabled(!hasValidContent)
+            .foregroundColor(hasValidContent ? AddCardStyle.accent : .gray.opacity(0.6))
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background((content.isEmpty && selectedImage == nil) ? Color.clear : AddCardStyle.accent.opacity(0.1))
+            .background(hasValidContent ? AddCardStyle.accent.opacity(0.1) : Color.clear)
             .cornerRadius(20)
         }
     }
@@ -150,20 +161,30 @@ struct AddCardView: View {
 #if os(macOS)
                 .frame(height: 150)
 #else
-                .frame(maxHeight: .infinity, alignment: .topLeading)
+                .frame(minHeight: 100)
 #endif
                 .textEditorPadding()
                 .background(Color.white.opacity(0.6))
                 .cornerRadius(16)
             
             if content.isEmpty {
-                Text("What's on your mind?")
+                Text(placeholderText)
                     .foregroundColor(.gray.opacity(0.5))
                     .font(.title3.weight(.semibold))
                     .padding(.horizontal, 14)
                     .padding(.vertical, 16)
+                    .allowsHitTesting(false)
             }
         }
+    }
+    
+    private var placeholderText: String {
+#if os(iOS)
+        if selectedImage != nil {
+            return "Add your notes here..."
+        }
+#endif
+        return "What's on your mind?"
     }
     
     private var notificationTimeView: some View {
@@ -329,21 +350,27 @@ struct AddCardView: View {
     }
     
     private func saveCard() {
-        var finalContent = content
+        var finalContent = content.trimmingCharacters(in: .whitespacesAndNewlines)
         
 #if os(iOS)
         // 如果有选中的图片，将图片转换为base64并保存
         if let image = selectedImage {
-            if let imageModel = ReadingCardModel.createFromImage(image) {
-                // 如果还有文本内容，将文本追加到图片数据后面
-                if !content.isEmpty && !content.isValidImageData {
-                    finalContent = imageModel.content + "\n" + content
-                } else {
-                    finalContent = imageModel.content
-                }
+            guard let imageData = image.compressedData(compressionQuality: 0.8) else {
+                return
+            }
+            let base64String = imageData.base64EncodedString()
+            
+            // 如果还有文本内容，将文本追加到图片数据后面
+            if !finalContent.isEmpty {
+                finalContent = base64String + "\n" + finalContent
+            } else {
+                finalContent = base64String
             }
         }
 #endif
+        
+        // 确保内容不为空
+        guard !finalContent.isEmpty else { return }
         
         let card = ReadingCardModel(
             content: finalContent,

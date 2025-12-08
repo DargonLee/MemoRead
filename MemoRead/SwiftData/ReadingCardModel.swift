@@ -45,9 +45,29 @@ final class ReadingCardModel {
     }
     
     private static func determineType(for content: String) -> ReadingCardType.RawValue {
-        if content.isValidURL {
+        let lines = content.components(separatedBy: .newlines)
+        var hasImage = false
+        var hasText = false
+        var hasURL = false
+        
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.isEmpty { continue }
+            
+            if trimmed.isValidImageData {
+                hasImage = true
+            } else if trimmed.isValidURL {
+                hasURL = true
+            } else {
+                hasText = true
+            }
+        }
+        
+        // 优先级：URL > Image > Text
+        // 如果同时有图片和文字，优先识别为图片类型
+        if hasURL {
             return ReadingCardType.link.rawValue
-        } else if content.isValidImageData {
+        } else if hasImage {
             return ReadingCardType.image.rawValue
         } else {
             return ReadingCardType.text.rawValue

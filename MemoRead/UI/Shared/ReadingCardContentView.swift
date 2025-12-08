@@ -10,19 +10,35 @@ import SwiftUI
 // MARK: - Main
 struct ReadingCardContentView: View {
     let item: ReadingCardModel
+    
+    private var parsedContent: ParsedContent {
+        ParsedContent(from: item.content)
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            switch ReadingCardModel.ReadingCardType(rawValue: item.type) {
-            case .image:
-                ContentImageView(item: item)
-            case .link:
-                ContentLinkView(item: item)
-            case .text:
-                ContentTextView(content: item.content)
-            case .none:
+        VStack(alignment: .leading, spacing: ContentLayout.sectionSpacing) {
+            // 图片（如果有）
+            if let imageData = parsedContent.imageData {
+                ImageDisplayView(imageData: imageData)
+            }
+            
+            // 文本内容（如果有）
+            if let text = parsedContent.text, !text.isEmpty {
+                TextDisplayView(content: text)
+            }
+            
+            // 链接（如果有）
+            if let url = parsedContent.url {
+                LinkDisplayView(url: url, item: item)
+            }
+            
+            // 如果所有内容都为空，显示空状态
+            if parsedContent.isEmpty {
                 ContentUnavailableView(
-                    "Empty", image: "doc.text.magnifyingglass", description: Text("Empty"))
+                    "Empty", 
+                    image: "doc.text.magnifyingglass", 
+                    description: Text("Empty")
+                )
             }
         }
 #if os(macOS)
@@ -31,6 +47,56 @@ struct ReadingCardContentView: View {
             Button("Copy") {}
         }
 #endif
+    }
+}
+
+// MARK: - Content Parser
+private struct ParsedContent {
+    let imageData: String?
+    let text: String?
+    let url: URL?
+    
+    var isEmpty: Bool {
+        imageData == nil && text == nil && url == nil
+    }
+    
+    init(from content: String) {
+        let lines = content.components(separatedBy: .newlines)
+        var imageData: String? = nil
+        var textLines: [String] = []
+        var url: URL? = nil
+        
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if trimmed.isEmpty { continue }
+            
+            // 检查是否是图片数据
+            if trimmed.isValidImageData {
+                imageData = trimmed
+            }
+            // 检查是否是URL
+            else if trimmed.isValidURL, let parsedURL = URL(string: trimmed) {
+                url = parsedURL
+            }
+            // 否则作为文本
+            else {
+                textLines.append(trimmed)
+            }
+        }
+        
+        // 如果没有找到图片数据，但整个内容是base64，可能是图片
+        if imageData == nil && content.isValidImageData {
+            imageData = content
+        }
+        
+        // 如果没有找到URL，但整个内容是URL
+        if url == nil && content.isValidURL, let parsedURL = URL(string: content) {
+            url = parsedURL
+        }
+        
+        self.imageData = imageData
+        self.text = textLines.isEmpty ? nil : textLines.joined(separator: "\n")
+        self.url = url
     }
 }
 
@@ -47,74 +113,40 @@ private enum ContentLineLimit {
     }
 }
 
-private struct ContentImageView: View {
-    let item: ReadingCardModel
+// MARK: - Image Display View
+private struct ImageDisplayView: View {
+    let imageData: String
     
-    private var imageAndText: (imageData: String?, text: String?) {
-        let lines = item.content.components(separatedBy: .newlines)
-        var imageData: String? = nil
-        var text: String? = nil
-        
-        for line in lines {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if trimmed.isEmpty { continue }
-            
-            if trimmed.isValidImageData {
-                imageData = trimmed
-            } else {
-                if text == nil {
-                    text = trimmed
-                } else {
-                    text = (text ?? "") + "\n" + trimmed
-                }
-            }
-        }
-        
-        // 如果没有找到文本，尝试从原始内容中提取
-        if text == nil && imageData == nil {
-            // 可能是base64编码的图片数据
-            imageData = item.content
-        }
-        
-        return (imageData ?? item.content, text)
+    private var image: Image? {
+        Image.create(from: imageData)
     }
-
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if let image = item.image {
-                image
+        if let image = image {
+            image
+                .resizable()
+                .scaledToFill()
+                .cornerRadius(ContentLayout.cardCornerRadius)
+                .frame(maxHeight: ContentLayout.imageMaxHeight)
+                .clipped()
+        } else {
+            VStack(spacing: 8) {
+                Image(systemName: "photo.badge.exclamationmark")
                     .resizable()
-                    .scaledToFill()
-                    .cornerRadius(ContentLayout.cardCornerRadius)
-                    .frame(maxHeight: ContentLayout.imageMaxHeight)
-                    .clipped()
-            } else {
-                VStack(spacing: 8) {
-                    Image(systemName: "photo.badge.exclamationmark")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 60)
-                        .foregroundColor(.gray)
-                    Text("Image not found")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                }
-                .frame(height: 100)
+                    .scaledToFit()
+                    .frame(height: 60)
+                    .foregroundColor(.gray)
+                Text("Image not found")
+                    .font(.caption)
+                    .foregroundColor(.gray)
             }
-            
-            // 图片下方的文本
-            if let text = imageAndText.text, !text.isEmpty {
-                Text(text)
-                    .font(.body)
-                    .foregroundColor(.primary)
-                    .lineSpacing(6)
-                    .padding(.top, 4)
-            }
+            .frame(height: 100)
         }
     }
 }
 
-private struct ContentTextView: View {
+// MARK: - Text Display View
+private struct TextDisplayView: View {
     let content: String
     
     private var titleAndBody: (title: String?, body: String) {
@@ -147,7 +179,7 @@ private struct ContentTextView: View {
                 
                 Text(titleAndBody.body)
                     .font(.body)
-                .lineLimit(ContentLineLimit.default)
+                    .lineLimit(ContentLineLimit.default)
                     .multilineTextAlignment(.leading)
                     .lineSpacing(6)
                     .foregroundColor(.primary)
@@ -224,54 +256,22 @@ private struct QuoteCardView: View {
     }
 }
 
-private struct ContentLinkView: View {
+// MARK: - Link Display View
+private struct LinkDisplayView: View {
+    let url: URL
     let item: ReadingCardModel
-    
-    private var url: URL? {
-        // 从内容中提取URL
-        let lines = item.content.components(separatedBy: .newlines)
-        for line in lines {
-            if let url = URL(string: line.trimmingCharacters(in: .whitespaces)), line.isValidURL {
-                return url
-            }
-        }
-        return URL(string: item.content)
-    }
-    
-    private var titleAndDescription: (title: String?, description: String?) {
-        let lines = item.content.components(separatedBy: .newlines)
-        var title: String? = nil
-        var description: String? = nil
-        
-        for line in lines {
-            let trimmed = line.trimmingCharacters(in: .whitespaces)
-            if trimmed.isEmpty { continue }
-            
-            if trimmed.isValidURL {
-                // 跳过URL行
-                continue
-            } else if title == nil {
-                title = trimmed
-            } else if description == nil {
-                description = trimmed
-            }
-        }
-        
-        return (title, description)
-    }
     
     private var isSocialMediaCard: Bool {
         // 检查是否是社交媒体卡片（包含特定关键词或格式）
+        let urlString = url.absoluteString.lowercased()
         let content = item.content.lowercased()
-        let lines = item.content.components(separatedBy: .newlines)
         
         // 检查是否包含社交媒体特征
-        let hasSocialMediaFeatures = content.contains("twitter") || 
-                                     content.contains("x.com") ||
-                                     (content.contains("@") && content.contains("http")) ||
-                                     lines.contains(where: { $0.contains("@") && $0.contains("http") })
-        
-        return hasSocialMediaFeatures
+        return urlString.contains("twitter") || 
+               urlString.contains("x.com") ||
+               content.contains("twitter") ||
+               content.contains("x.com") ||
+               (content.contains("@") && content.contains("http"))
     }
     
     var body: some View {
@@ -280,49 +280,27 @@ private struct ContentLinkView: View {
             SocialMediaCardView(item: item, url: url)
         } else {
             // 普通链接卡片
-            VStack(alignment: .leading, spacing: 12) {
-                if let title = titleAndDescription.title {
-                    Text(title)
-                        .font(.headline)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                }
-                
-                if let description = titleAndDescription.description {
-                    Text(description)
-                        .font(.body)
-                        .foregroundColor(.primary)
-                }
-                
-                if let url = url {
-                    Link(destination: url) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "link")
-                                .font(.caption)
-                                .foregroundColor(.blue)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("EXTERNAL LINK")
-                                    .font(.caption2)
-                                    .foregroundColor(.gray)
-                                Text(url.absoluteString)
-                                    .font(.caption)
-                                    .foregroundColor(.primary)
-                                    .lineLimit(1)
-                            }
-                            
-                            Spacer()
-                        }
-                    .padding(12)
-                    .background(ContentStyle.externalLinkBackground)
-                    .cornerRadius(ContentLayout.cardCornerRadius)
+            Link(destination: url) {
+                HStack(spacing: 8) {
+                    Image(systemName: "link")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("EXTERNAL LINK")
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                        Text(url.absoluteString)
+                            .font(.caption)
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
                     }
-                } else {
-                    Text(item.content)
-                        .font(.body)
-                    .lineLimit(ContentLineLimit.default)
-                        .foregroundColor(.primary)
+                    
+                    Spacer()
                 }
+                .padding(12)
+                .background(ContentStyle.externalLinkBackground)
+                .cornerRadius(ContentLayout.cardCornerRadius)
             }
         }
     }
@@ -450,6 +428,7 @@ private struct SocialMediaCardView: View {
 
 // MARK: - Layout & Style
 private enum ContentLayout {
+    static let sectionSpacing: CGFloat = 12
     static let imageMaxHeight: CGFloat = 300
     static let quotePadding: CGFloat = 16
     static let cardCornerRadius: CGFloat = 12
