@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import PhotosUI
+#endif
 
 // MARK: - Time Option
 private enum TimeOption {
@@ -25,6 +28,11 @@ struct AddCardView: View {
     @State private var showNotificationPicker = false
     @State private var selectedNotificationTime: Date = Date()
     @State private var selectedTimeOption: TimeOption = .custom
+#if os(iOS)
+    @State private var showPhotoPicker = false
+    @State private var showCameraPicker = false
+    @State private var photoItem: PhotosPickerItem?
+#endif
     
     // MARK: - Body
     var body: some View {
@@ -43,6 +51,25 @@ struct AddCardView: View {
             .sheet(isPresented: $showNotificationPicker) {
                 notificationPickerView
             }
+#if os(iOS)
+            .sheet(isPresented: $showPhotoPicker) {
+                PhotosPicker(
+                    "Select Photo",
+                    selection: $photoItem,
+                    matching: .images
+                )
+                .padding()
+            }
+            .sheet(isPresented: $showCameraPicker) {
+                CameraPickerView { image in
+                    applySelectedImage(image)
+                    showCameraPicker = false
+                }
+            }
+            .onChange(of: photoItem) { _, newValue in
+                Task { await loadSelectedPhoto(newValue) }
+            }
+#endif
         }
     }
     
@@ -247,13 +274,15 @@ struct AddCardView: View {
     
     // MARK: - Actions
     private func handleAddImage() {
-        // TODO: 实现从相册选择图片的逻辑
-        // 这里可以弹出 PhotosPicker 或 UIImagePickerController
+        #if os(iOS)
+        showPhotoPicker = true
+        #endif
     }
     
     private func handleTakePhoto() {
-        // TODO: 实现拍照逻辑
-        // 这里可以弹出相机控制器
+        #if os(iOS)
+        showCameraPicker = true
+        #endif
     }
     
     private func handleAutoTag() {
@@ -294,6 +323,28 @@ struct AddCardView: View {
             of: Date()
         ) ?? Date()
     }
+    
+#if os(iOS)
+    // MARK: - Image helpers
+    private func applySelectedImage(_ image: UIImage) {
+        if let model = ReadingCardModel.createFromImage(image) {
+            // 填充为图片内容；如需保留原文本可改为追加
+            content = model.content
+        }
+    }
+    
+    private func loadSelectedPhoto(_ item: PhotosPickerItem?) async {
+        guard let item else { return }
+        do {
+            if let data = try await item.loadTransferable(type: Data.self),
+               let image = UIImage(data: data) {
+                applySelectedImage(image)
+            }
+        } catch {
+            print("Photo load error: \(error.localizedDescription)")
+        }
+    }
+#endif
 }
 
 #if os(iOS)
@@ -306,6 +357,44 @@ private func iconButton(system: String, action: @escaping () -> Void) -> some Vi
             .frame(width: 44, height: 44)
             .background(Color.white.opacity(0.7))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+// MARK: - Camera Picker (UIKit)
+private struct CameraPickerView: UIViewControllerRepresentable {
+    let onImagePicked: (UIImage) -> Void
+    
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = context.coordinator
+        picker.allowsEditing = false
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onImagePicked: onImagePicked)
+    }
+    
+    final class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+        let onImagePicked: (UIImage) -> Void
+        
+        init(onImagePicked: @escaping (UIImage) -> Void) {
+            self.onImagePicked = onImagePicked
+        }
+        
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                onImagePicked(image)
+            }
+            picker.dismiss(animated: true)
+        }
+        
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            picker.dismiss(animated: true)
+        }
     }
 }
 #endif
