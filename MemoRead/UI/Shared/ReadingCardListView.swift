@@ -50,14 +50,7 @@ struct ReadingCardListView: View {
             .padding(.vertical, 8)
         }
         .background(
-            LinearGradient(
-                colors: [
-                    Color(white: 0.96),
-                    Color(white: 0.94)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            Color.clear
         )
     }
 }

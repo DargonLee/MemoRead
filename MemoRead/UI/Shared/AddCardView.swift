@@ -32,6 +32,7 @@ struct AddCardView: View {
     @State private var showPhotoPicker = false
     @State private var showCameraPicker = false
     @State private var photoItem: PhotosPickerItem?
+    @State private var selectedImage: UIImage?
 #endif
     
     // MARK: - Body
@@ -40,6 +41,11 @@ struct AddCardView: View {
             VStack(spacing: 20) {
                 topHandle
                 header
+#if os(iOS)
+                if selectedImage != nil {
+                    imagePreviewView
+                }
+#endif
                 contentEditorView
                 notificationTimeView
                 bottomToolbar
@@ -52,14 +58,11 @@ struct AddCardView: View {
                 notificationPickerView
             }
 #if os(iOS)
-            .sheet(isPresented: $showPhotoPicker) {
-                PhotosPicker(
-                    "Select Photo",
-                    selection: $photoItem,
-                    matching: .images
-                )
-                .padding()
-            }
+            .photosPicker(
+                isPresented: $showPhotoPicker,
+                selection: $photoItem,
+                matching: .images
+            )
             .sheet(isPresented: $showCameraPicker) {
                 CameraPickerView { image in
                     applySelectedImage(image)
@@ -99,10 +102,46 @@ struct AddCardView: View {
                 saveCard()
                 dismiss()
             }
-            .disabled(content.isEmpty)
-            .foregroundColor(content.isEmpty ? .gray.opacity(0.6) : .primary)
+            .disabled(content.isEmpty && selectedImage == nil)
+            .foregroundColor((content.isEmpty && selectedImage == nil) ? .gray.opacity(0.6) : AddCardStyle.accent)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background((content.isEmpty && selectedImage == nil) ? Color.clear : AddCardStyle.accent.opacity(0.1))
+            .cornerRadius(20)
         }
     }
+    
+#if os(iOS)
+    private var imagePreviewView: some View {
+        ZStack(alignment: .topTrailing) {
+            if let image = selectedImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(height: 200)
+                    .frame(maxWidth: .infinity)
+                    .clipped()
+                    .cornerRadius(12)
+                
+                Button(action: {
+                    selectedImage = nil
+                    // 如果content是图片数据，清空它
+                    if content.isValidImageData {
+                        content = ""
+                    }
+                }) {
+                    Image(systemName: "trash")
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .padding(8)
+                        .background(Color.black.opacity(0.6))
+                        .clipShape(Circle())
+                }
+                .padding(8)
+            }
+        }
+    }
+#endif
     
     private var contentEditorView: some View {
         ZStack(alignment: .topLeading) {
@@ -290,8 +329,24 @@ struct AddCardView: View {
     }
     
     private func saveCard() {
+        var finalContent = content
+        
+#if os(iOS)
+        // 如果有选中的图片，将图片转换为base64并保存
+        if let image = selectedImage {
+            if let imageModel = ReadingCardModel.createFromImage(image) {
+                // 如果还有文本内容，将文本追加到图片数据后面
+                if !content.isEmpty && !content.isValidImageData {
+                    finalContent = imageModel.content + "\n" + content
+                } else {
+                    finalContent = imageModel.content
+                }
+            }
+        }
+#endif
+        
         let card = ReadingCardModel(
-            content: content,
+            content: finalContent,
             reminderAt: selectedNotificationTime
         )
         contxt.insert(card)
@@ -327,10 +382,8 @@ struct AddCardView: View {
 #if os(iOS)
     // MARK: - Image helpers
     private func applySelectedImage(_ image: UIImage) {
-        if let model = ReadingCardModel.createFromImage(image) {
-            // 填充为图片内容；如需保留原文本可改为追加
-            content = model.content
-        }
+        selectedImage = image
+        // 保留原有的文本内容，不覆盖
     }
     
     private func loadSelectedPhoto(_ item: PhotosPickerItem?) async {
@@ -338,7 +391,9 @@ struct AddCardView: View {
         do {
             if let data = try await item.loadTransferable(type: Data.self),
                let image = UIImage(data: data) {
-                applySelectedImage(image)
+                await MainActor.run {
+                    applySelectedImage(image)
+                }
             }
         } catch {
             print("Photo load error: \(error.localizedDescription)")
