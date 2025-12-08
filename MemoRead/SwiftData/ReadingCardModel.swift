@@ -98,6 +98,24 @@ extension ReadingCardModel {
         let base64String = imageData.base64EncodedString()
         return ReadingCardModel(content: base64String)
     }
+    
+    // 从内容中提取标签（以#开头的文本）
+    var extractedTag: String? {
+        // 如果是链接类型，返回"Link"或"Design"等
+        if type == ReadingCardType.link.rawValue {
+            return "Link"
+        }
+        
+        // 从文本内容中提取标签
+        let tagPattern = #"#(\S+)"#
+        if let regex = try? NSRegularExpression(pattern: tagPattern, options: []),
+           let match = regex.firstMatch(in: content, range: NSRange(content.startIndex..., in: content)),
+           let range = Range(match.range(at: 1), in: content) {
+            return String(content[range])
+        }
+        
+        return nil
+    }
 }
 
 extension ReadingCardModel {

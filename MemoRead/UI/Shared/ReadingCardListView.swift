@@ -37,18 +37,27 @@ struct ReadingCardListView: View {
     }
     
     var body: some View {
-        List {
-            ForEach(readingCards) { item in
-                ReadingCardView(item: item)
-                    .listRowSeparator(.hidden)
-            }
-            .onDelete { indices in
-                indices.forEach { index in
-                    let card = readingCards[index]
-                    context.delete(card)
+        ScrollView {
+            VStack(spacing: 0) {
+                ForEach(Array(readingCards.enumerated()), id: \.element.id) { index, item in
+                    TimelineCardView(
+                        item: item,
+                        isLast: index == readingCards.count - 1
+                    )
+                    .padding(.bottom, index == readingCards.count - 1 ? 16 : 0)
                 }
             }
+            .padding(.vertical, 8)
         }
-        .listStyle(.plain)
+        .background(
+            LinearGradient(
+                colors: [
+                    Color(white: 0.96),
+                    Color(white: 0.94)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
     }
 }

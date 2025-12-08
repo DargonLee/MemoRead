@@ -14,15 +14,15 @@ extension Date {
         let components = calendar.dateComponents([.minute, .hour, .day, .month], from: self, to: now)
         
         if let month = components.month, month > 0 {
-            return "\(month) months ago"
+            return "\(month)个月前"
         } else if let day = components.day, day > 0 {
-            return "\(day) days ago"
+            return "\(day)天前"
         } else if let hour = components.hour, hour > 0 {
-            return "\(hour) hours ago"
+            return "\(hour)小时前"
         } else if let minute = components.minute, minute > 0 {
-            return "\(minute) minutes ago"
+            return "\(minute)分钟前"
         } else {
-            return "just now"
+            return "刚刚"
         }
     }
 }

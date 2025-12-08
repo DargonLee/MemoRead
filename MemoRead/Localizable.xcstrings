@@ -171,6 +171,9 @@
         }
       }
     },
+    "EXTERNAL LINK" : {
+
+    },
     "iCloud Sync" : {
       "localizations" : {
         "zh-Hans" : {
@@ -280,6 +283,9 @@
           }
         }
       }
+    },
+    "Settings" : {
+
     },
     "Sort" : {
       "localizations" : {
