@@ -75,9 +75,14 @@ open MemoRead.xcodeproj
 ## 📝 开发计划
 
 - [ ] 支持更多文件格式
-- [ ] 添加协作功能
 - [ ] 优化离线性能
 - [ ] 引入 AI 辅助功能
+- [ ] https://memo.vaaat.com/
+- [ ] Mac版本的App可以从右侧呼出
+- [ ] 列表形式参考 `screenshot.png`
+- [ ] 使用`MultipeerConnectivity`来完成近场通信
+
+
 
 ## 🤝 参与贡献
 
