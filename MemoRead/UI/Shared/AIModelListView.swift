@@ -24,10 +24,6 @@ struct AIModelListView: View {
                             AIModelService.shared.setDefaultModel(model)
                             savedModels = AIModelService.shared.savedModels
                         },
-                        onEdit: {
-                            editingModel = model
-                            showAddModelSheet = true
-                        },
                         onDelete: {
                             deleteModel(model)
                         }
@@ -91,7 +87,6 @@ struct AIModelListRowView: View {
     let model: AIModel
     let isSelected: Bool
     let onSelect: () -> Void
-    let onEdit: () -> Void
     let onDelete: () -> Void
     
     @State private var isTesting = false
@@ -101,16 +96,9 @@ struct AIModelListRowView: View {
         Button(action: onSelect) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(model.name)
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        if isSelected {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.blue)
-                                .font(.caption)
-                        }
-                    }
+                    Text(model.name)
+                        .font(.headline)
+                        .foregroundColor(.primary)
                     Text(model.provider)
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -135,16 +123,16 @@ struct AIModelListRowView: View {
                             .scaleEffect(0.8)
                     } else {
                         Button(action: testConnection) {
-                            Label("Test", systemImage: "network")
-                                .font(.caption)
+                            Image(systemName: "network")
+                                .foregroundColor(.blue)
                         }
-                        .buttonStyle(.bordered)
-                        .controlSize(.small)
+                        .buttonStyle(.plain)
                     }
                     
-                    Button(action: onEdit) {
-                        Image(systemName: "pencil")
+                    if isSelected {
+                        Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.blue)
+                            .font(.title3)
                     }
                 }
             }
@@ -153,9 +141,6 @@ struct AIModelListRowView: View {
         .buttonStyle(.plain)
 #if os(macOS)
         .contextMenu {
-            Button(action: onEdit) {
-                Label("Edit", systemImage: "pencil")
-            }
             Button(role: .destructive, action: onDelete) {
                 Label("Delete", systemImage: "trash")
             }
