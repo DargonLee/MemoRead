@@ -7,6 +7,11 @@
 
 import SwiftUI
 
+// MARK: - Button Layout Constants
+enum ButtonLayout {
+    static let minimumSize: CGFloat = 44
+}
+
 struct TimeButtonStyle: ButtonStyle {
     let isSelected: Bool
     

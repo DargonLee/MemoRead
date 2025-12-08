@@ -111,17 +111,19 @@ private struct CompleteButton: View {
             Group {
                 if isCompleted {
                     Text("Completed")
+                        .font(.body)
                         .foregroundColor(.gray)
                 } else if type == .image {
                     Image(systemName: "square.and.arrow.down")
-                        .font(.title3)
+                        .font(.title2)
                         .foregroundColor(.blue)
                 } else {
                     Image(systemName: "doc.on.doc")
-                        .font(.title3)
+                        .font(.title2)
                         .foregroundColor(.blue)
                 }
             }
+            .frame(minWidth: ButtonLayout.minimumSize, minHeight: ButtonLayout.minimumSize)
         }
         .padding(.leading, 8)
         .disabled(isCompleted)

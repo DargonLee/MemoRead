@@ -167,18 +167,19 @@ private struct CompleteButton: View {
             Group {
                 if isCompleted {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.caption)
+                        .font(.title3)
                         .foregroundColor(.gray)
                 } else if type == .image {
                     Image(systemName: "square.and.arrow.down")
-                        .font(.caption)
+                        .font(.title3)
                         .foregroundColor(.blue)
                 } else {
                     Image(systemName: "doc.on.doc")
-                        .font(.caption)
+                        .font(.title3)
                         .foregroundColor(.blue)
                 }
             }
+            .frame(width: ButtonLayout.minimumSize, height: ButtonLayout.minimumSize)
         }
         .disabled(isCompleted)
     }
@@ -244,13 +245,14 @@ private struct AISummaryButton: View {
             Group {
                 if isProcessing {
                     ProgressView()
-                        .scaleEffect(0.7)
+                        .scaleEffect(1.0)
                 } else {
                     Image(systemName: "sparkles")
-                        .font(.caption)
+                        .font(.title3)
                         .foregroundColor(.blue)
                 }
             }
+            .frame(width: ButtonLayout.minimumSize, height: ButtonLayout.minimumSize)
         }
         .disabled(isProcessing)
     }
