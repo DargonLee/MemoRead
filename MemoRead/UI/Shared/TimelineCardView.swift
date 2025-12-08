@@ -335,7 +335,8 @@ private struct SummarySheetView: View {
 #Preview {
     VStack(spacing: 0) {
         TimelineCardView(item: ReadingCardModel.sampleCards()[0], isLast: false)
-        TimelineCardView(item: ReadingCardModel.sampleCards()[1], isLast: true)
+        TimelineCardView(item: ReadingCardModel.sampleCards()[1], isLast: false)
+        TimelineCardView(item: ReadingCardModel.sampleCards()[2], isLast: true)
     }
     .padding()
     .background(Color(white: 0.95))

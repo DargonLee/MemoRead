@@ -29,20 +29,17 @@ struct AddCardView: View {
     // MARK: - Body
     var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
+            VStack(spacing: 20) {
+                topHandle
+                header
                 contentEditorView
                 notificationTimeView
-                notificationButtonsView
+                bottomToolbar
             }
-            .padding()
-            .navigationTitle("Create Reading Card")
-            .toolbar {
-#if os(iOS)
-                navigationBarButtons
-#else
-                macOSNavigationBarButtons
-#endif
-            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 20)
+            .background(AddCardStyle.background)
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .sheet(isPresented: $showNotificationPicker) {
                 notificationPickerView
             }
@@ -50,33 +47,105 @@ struct AddCardView: View {
     }
     
     // MARK: - Views
+    private var topHandle: some View {
+        Capsule()
+            .fill(Color.gray.opacity(0.2))
+            .frame(width: 40, height: 8)
+            .padding(.top, 4)
+    }
+    
+    private var header: some View {
+        HStack {
+            Button("Cancel") {
+                dismiss()
+            }
+            .foregroundColor(.gray)
+            
+            Spacer()
+            
+            Text("New Note")
+                .font(.title2.bold())
+            
+            Spacer()
+            
+            Button("Save") {
+                saveCard()
+                dismiss()
+            }
+            .disabled(content.isEmpty)
+            .foregroundColor(content.isEmpty ? .gray.opacity(0.6) : .primary)
+        }
+    }
+    
     private var contentEditorView: some View {
-        TextEditor(text: $content)
-            .font(.body)
+        ZStack(alignment: .topLeading) {
+            TextEditor(text: $content)
+                .font(.body)
 #if os(macOS)
-            .frame(height: 150)
+                .frame(height: 150)
 #else
-            .frame(maxHeight: .infinity)
+                .frame(maxHeight: .infinity, alignment: .topLeading)
 #endif
-            .textEditorPadding()
-            .cornerRadius(8)
+                .textEditorPadding()
+                .background(Color.white.opacity(0.6))
+                .cornerRadius(16)
+            
+            if content.isEmpty {
+                Text("What's on your mind?")
+                    .foregroundColor(.gray.opacity(0.5))
+                    .font(.title3.weight(.semibold))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 16)
+            }
+        }
     }
     
     private var notificationTimeView: some View {
-        Text(selectedNotificationTime.formatted(date: .abbreviated, time: .shortened))
-            .foregroundColor(.gray)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        HStack {
+            Image(systemName: "bell")
+                .foregroundColor(AddCardStyle.accent)
+            Text(selectedNotificationTime.formatted(date: .abbreviated, time: .shortened))
+                .foregroundColor(.gray)
+            Spacer()
+            reminderQuickActions
+        }
+        .font(.subheadline)
     }
     
-    private var notificationButtonsView: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "bell")
-                .foregroundColor(.blue)
-                .symbolEffect(.bounce, value: 1)
+    private var bottomToolbar: some View {
+        HStack(spacing: 20) {
+            HStack(spacing: 16) {
+                iconButton(system: "photo.on.rectangle") {
+                    handleAddImage()
+                }
+                iconButton(system: "camera") {
+                    handleTakePhoto()
+                }
+            }
+            
+            Divider()
+                .frame(height: 32)
+            
+            Button(action: handleAutoTag) {
+                HStack(spacing: 6) {
+                    Image(systemName: "brain.head.profile")
+                        .foregroundColor(AddCardStyle.accent)
+                    Text("Auto-tag")
+                        .foregroundColor(AddCardStyle.accent)
+                        .font(.headline)
+                }
+            }
+            
+            Spacer()
+        }
+        .padding(.top, 4)
+    }
+    
+    private var reminderQuickActions: some View {
+        HStack(spacing: 8) {
             tomorrowMorningButton
             tonightButton
             customTimeButton
-            Spacer()
         }
     }
     
@@ -116,6 +185,11 @@ struct AddCardView: View {
                 Button("Cancel") {
                     dismiss()
                 }
+                .foregroundColor(.gray)
+            }
+            ToolbarItem(placement: .principal) {
+                Text("New Note")
+                    .font(.title2.bold())
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Save") {
@@ -123,8 +197,8 @@ struct AddCardView: View {
                     dismiss()
                 }
                 .disabled(content.isEmpty)
+                .foregroundColor(content.isEmpty ? .gray.opacity(0.6) : .primary)
             }
-            
         }
     }
 #endif
@@ -172,6 +246,20 @@ struct AddCardView: View {
 #endif
     
     // MARK: - Actions
+    private func handleAddImage() {
+        // TODO: 实现从相册选择图片的逻辑
+        // 这里可以弹出 PhotosPicker 或 UIImagePickerController
+    }
+    
+    private func handleTakePhoto() {
+        // TODO: 实现拍照逻辑
+        // 这里可以弹出相机控制器
+    }
+    
+    private func handleAutoTag() {
+        // TODO: 实现自动打标签逻辑
+    }
+    
     private func saveCard() {
         let card = ReadingCardModel(
             content: content,
@@ -206,6 +294,26 @@ struct AddCardView: View {
             of: Date()
         ) ?? Date()
     }
+}
+
+#if os(iOS)
+// MARK: - Helpers
+private func iconButton(system: String, action: @escaping () -> Void) -> some View {
+    Button(action: action) {
+        Image(systemName: system)
+            .font(.title3)
+            .foregroundColor(AddCardStyle.accent)
+            .frame(width: 44, height: 44)
+            .background(Color.white.opacity(0.7))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+#endif
+
+// MARK: - Styles
+private enum AddCardStyle {
+    static let accent = Color.purple
+    static let background = Color.white.opacity(0.9)
 }
 
 #Preview {
