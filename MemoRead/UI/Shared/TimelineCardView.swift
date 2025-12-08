@@ -12,6 +12,9 @@ struct TimelineCardView: View {
     let item: ReadingCardModel
     let isLast: Bool
     @State private var isCompleted: Bool
+    @State private var showSummarySheet = false
+    @State private var summaryText: String = ""
+    @State private var isGeneratingSummary = false
     private var type: ReadingCardModel.ReadingCardType
     
     // MARK: - Initialization
@@ -24,26 +27,34 @@ struct TimelineCardView: View {
     
     // MARK: - Body
     var body: some View {
-        HStack(alignment: .top, spacing: 0) {
+        HStack(alignment: .top, spacing: 12) {
             // 左侧时间线
             timelineIndicator
             
             // 右侧内容区域
             VStack(alignment: .leading, spacing: 12) {
-                // 头部：时间戳和标签
+                // 顶部：时间戳 + 标签 水平排列
                 headerView
                 
-                // 内容区域
+                // 中部：内容区域撑满
                 ReadingCardContentView(item: item)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 
-                // 操作按钮
+                // 底部：操作区域
                 actionView
             }
-            .padding(.leading, 16)
-            .padding(.trailing, 8)
-            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(TimelineStyle.cardBackground)
+        .sheet(isPresented: $showSummarySheet) {
+            SummarySheetView(
+                content: item.content,
+                summary: $summaryText,
+                isGenerating: $isGeneratingSummary
+            )
+        }
     }
     
     // MARK: - Timeline Indicator
@@ -51,51 +62,46 @@ struct TimelineCardView: View {
         VStack(spacing: 0) {
             // 蓝色圆点
             Circle()
-                .fill(Color.blue)
+                .fill(TimelineStyle.accent)
                 .frame(width: 10, height: 10)
             
             // 连接线（如果不是最后一个）
             if !isLast {
                 Rectangle()
-                    .fill(Color.blue.opacity(0.3))
+                    .fill(TimelineStyle.line)
                     .frame(width: 2)
                     .frame(minHeight: 50)
                     .padding(.top, 4)
             }
         }
-        .frame(width: 10)
+        .frame(width: 12, alignment: .center)
     }
     
     // MARK: - Header View
     private var headerView: some View {
-        HStack(alignment: .center, spacing: 8) {
-            // 时间戳
+        HStack(spacing: 8) {
             Text(item.createdAt.timeAgoDisplay())
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundColor(.primary)
             
-            Spacer()
-            
-            // 标签
             if let tag = item.extractedTag {
                 TagView(tag: tag)
             } else {
-                // 根据类型显示不同的标签
                 let tagName = type == .link ? "Design" : type.name
                 TagView(tag: tagName)
             }
             
-            // 右侧图标（可选）
-            Image(systemName: "brain")
-                .font(.caption)
-                .foregroundColor(.gray)
+            Spacer()
         }
     }
     
     // MARK: - Action View
     private var actionView: some View {
-        HStack {
+        HStack(spacing: 12) {
             Spacer()
+            // AI总结按钮
+            AISummaryButton(action: handleAISummary)
+            // 复制按钮
             CompleteButton(
                 type: self.type,
                 isCompleted: $isCompleted,
@@ -125,6 +131,23 @@ struct TimelineCardView: View {
             isCompleted = false
         }
     }
+    
+    private func handleAISummary() {
+        isGeneratingSummary = true
+        showSummarySheet = true
+        
+        AISummaryService.shared.generateSummary(for: item.content) { result in
+            DispatchQueue.main.async {
+                isGeneratingSummary = false
+                switch result {
+                case .success(let summary):
+                    summaryText = summary
+                case .failure(let error):
+                    summaryText = "生成总结时出错: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
 }
 
 // MARK: - Tag View
@@ -137,7 +160,7 @@ private struct TagView: View {
             .foregroundColor(.white)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color.gray.opacity(0.6))
+            .background(TimelineStyle.tagBackground)
             .cornerRadius(6)
     }
 }
@@ -167,6 +190,119 @@ private struct CompleteButton: View {
             }
         }
         .disabled(isCompleted)
+    }
+}
+
+// MARK: - Timeline Style
+private enum TimelineStyle {
+    static let accent = Color.blue
+    static let line = Color.blue.opacity(0.3)
+    static let tagBackground = Color.gray.opacity(0.6)
+    static let cardBackground = Color(.systemBackground)
+}
+
+// MARK: - AI Summary Button
+private struct AISummaryButton: View {
+    let action: () -> Void
+    @State private var isProcessing = false
+    
+    var body: some View {
+        Button(action: {
+            isProcessing = true
+            action()
+            // 模拟处理完成后重置状态
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                isProcessing = false
+            }
+        }) {
+            Group {
+                if isProcessing {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                } else {
+                    Image(systemName: "sparkles")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+            }
+        }
+        .disabled(isProcessing)
+    }
+}
+
+// MARK: - Summary Sheet View
+private struct SummarySheetView: View {
+    let content: String
+    @Binding var summary: String
+    @Binding var isGenerating: Bool
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                // 原文
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("原文")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    
+                    ScrollView {
+                        Text(content)
+                            .font(.body)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxHeight: 200)
+                    .padding(12)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(8)
+                }
+                
+                // AI总结
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("AI总结")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        
+                        if isGenerating {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    }
+                    
+                    if isGenerating {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
+                        }
+                        .frame(height: 100)
+                    } else {
+                        ScrollView {
+                            Text(summary.isEmpty ? "点击生成总结" : summary)
+                                .font(.body)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .frame(maxHeight: 200)
+                        .padding(12)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("AI总结")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("完成") {
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }
 

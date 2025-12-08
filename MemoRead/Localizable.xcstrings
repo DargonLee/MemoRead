@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "- %@" : {
+
+    },
     "About" : {
       "localizations" : {
         "zh-Hans" : {
@@ -20,6 +23,9 @@
           }
         }
       }
+    },
+    "AI总结" : {
+
     },
     "Appearance" : {
       "localizations" : {
@@ -376,6 +382,15 @@
           }
         }
       }
+    },
+    "X.com" : {
+
+    },
+    "原文" : {
+
+    },
+    "完成" : {
+
     }
   },
   "version" : "1.0"
