@@ -16,6 +16,12 @@ struct TimelineCardView: View {
     @State private var summaryText: String = ""
     @State private var isGeneratingSummary = false
     private var type: ReadingCardModel.ReadingCardType
+    private var cardTag: String {
+        if let tag = item.extractedTag {
+            return tag
+        }
+        return type == .link ? "Design" : type.name
+    }
     
     // MARK: - Initialization
     init(item: ReadingCardModel, isLast: Bool = false) {
@@ -27,12 +33,12 @@ struct TimelineCardView: View {
     
     // MARK: - Body
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: TimelineLayout.horizontalSpacing) {
             // 左侧时间线
             timelineIndicator
             
             // 右侧内容区域
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: TimelineLayout.sectionSpacing) {
                 // 顶部：时间戳 + 标签 水平排列
                 headerView
                 
@@ -45,8 +51,8 @@ struct TimelineCardView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.horizontal, TimelineLayout.horizontalPadding)
+        .padding(.vertical, TimelineLayout.verticalPadding)
         .background(TimelineStyle.cardBackground)
         .sheet(isPresented: $showSummarySheet) {
             SummarySheetView(
@@ -59,22 +65,12 @@ struct TimelineCardView: View {
     
     // MARK: - Timeline Indicator
     private var timelineIndicator: some View {
-        VStack(spacing: 0) {
-            // 蓝色圆点
-            Circle()
-                .fill(TimelineStyle.accent)
-                .frame(width: 10, height: 10)
-            
-            // 连接线（如果不是最后一个）
-            if !isLast {
-                Rectangle()
-                    .fill(TimelineStyle.line)
-                    .frame(width: 2)
-                    .frame(minHeight: 50)
-                    .padding(.top, 4)
-            }
-        }
-        .frame(width: 12, alignment: .center)
+        TimelineIndicator(
+            isLast: isLast,
+            accent: TimelineStyle.accent,
+            line: TimelineStyle.line
+        )
+        .frame(width: TimelineLayout.timelineWidth, alignment: .center)
     }
     
     // MARK: - Header View
@@ -84,12 +80,7 @@ struct TimelineCardView: View {
                 .font(.caption)
                 .foregroundColor(.primary)
             
-            if let tag = item.extractedTag {
-                TagView(tag: tag)
-            } else {
-                let tagName = type == .link ? "Design" : type.name
-                TagView(tag: tagName)
-            }
+            TagView(tag: cardTag)
             
             Spacer()
         }
@@ -193,12 +184,47 @@ private struct CompleteButton: View {
     }
 }
 
-// MARK: - Timeline Style
+// MARK: - Timeline Style & Layout
 private enum TimelineStyle {
     static let accent = Color.blue
     static let line = Color.blue.opacity(0.3)
     static let tagBackground = Color.gray.opacity(0.6)
     static let cardBackground = Color(.systemBackground)
+}
+
+private enum TimelineLayout {
+    static let horizontalSpacing: CGFloat = 12
+    static let sectionSpacing: CGFloat = 12
+    static let horizontalPadding: CGFloat = 16
+    static let verticalPadding: CGFloat = 8
+    static let timelineWidth: CGFloat = 12
+    static let dotSize: CGFloat = 10
+    static let lineWidth: CGFloat = 2
+    static let lineMinHeight: CGFloat = 50
+    static let lineTopPadding: CGFloat = 4
+}
+
+// MARK: - Timeline Indicator
+private struct TimelineIndicator: View {
+    let isLast: Bool
+    let accent: Color
+    let line: Color
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Circle()
+                .fill(accent)
+                .frame(width: TimelineLayout.dotSize, height: TimelineLayout.dotSize)
+            
+            if !isLast {
+                Rectangle()
+                    .fill(line)
+                    .frame(width: TimelineLayout.lineWidth)
+                    .frame(minHeight: TimelineLayout.lineMinHeight)
+                    .padding(.top, TimelineLayout.lineTopPadding)
+            }
+        }
+    }
 }
 
 // MARK: - AI Summary Button

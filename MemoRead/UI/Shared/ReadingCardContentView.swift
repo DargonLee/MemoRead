@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+// MARK: - Main
 struct ReadingCardContentView: View {
     let item: ReadingCardModel
 
@@ -29,6 +30,19 @@ struct ReadingCardContentView: View {
             Button("Delete") {}
             Button("Copy") {}
         }
+#endif
+    }
+}
+
+// MARK: - Helpers
+private enum ContentLineLimit {
+    static var `default`: Int? {
+#if os(iOS)
+        return 3
+#elseif os(macOS)
+        return 5
+#else
+        return nil
 #endif
     }
 }
@@ -71,8 +85,8 @@ private struct ContentImageView: View {
                 image
                     .resizable()
                     .scaledToFill()
-                    .cornerRadius(8)
-                    .frame(maxHeight: 300)
+                    .cornerRadius(ContentLayout.cardCornerRadius)
+                    .frame(maxHeight: ContentLayout.imageMaxHeight)
                     .clipped()
             } else {
                 VStack(spacing: 8) {
@@ -133,11 +147,7 @@ private struct ContentTextView: View {
                 
                 Text(titleAndBody.body)
                     .font(.body)
-    #if os(iOS)
-                    .lineLimit(3)
-    #elseif os(macOS)
-                    .lineLimit(5)
-    #endif
+                .lineLimit(ContentLineLimit.default)
                     .multilineTextAlignment(.leading)
                     .lineSpacing(6)
                     .foregroundColor(.primary)
@@ -192,9 +202,9 @@ private struct QuoteCardView: View {
                     }
                 }
             }
-            .padding(16)
-            .background(Color.gray.opacity(0.08))
-            .cornerRadius(12)
+            .padding(ContentLayout.quotePadding)
+            .background(ContentStyle.quoteBackground)
+            .cornerRadius(ContentLayout.cardCornerRadius)
             
             // 下方文本（如果有）
             let remainingText = content.components(separatedBy: .newlines)
@@ -303,13 +313,14 @@ private struct ContentLinkView: View {
                             
                             Spacer()
                         }
-                        .padding(12)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
+                    .padding(12)
+                    .background(ContentStyle.externalLinkBackground)
+                    .cornerRadius(ContentLayout.cardCornerRadius)
                     }
                 } else {
                     Text(item.content)
                         .font(.body)
+                    .lineLimit(ContentLineLimit.default)
                         .foregroundColor(.primary)
                 }
             }
@@ -361,7 +372,7 @@ private struct SocialMediaCardView: View {
                     // 头像占位
                     Circle()
                         .fill(Color.gray.opacity(0.3))
-                        .frame(width: 40, height: 40)
+                        .frame(width: ContentLayout.socialAvatarSize, height: ContentLayout.socialAvatarSize)
                     
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 4) {
@@ -414,9 +425,9 @@ private struct SocialMediaCardView: View {
                         .foregroundColor(.gray)
                 }
             }
-            .padding(16)
-            .background(Color.black.opacity(0.8))
-            .cornerRadius(12)
+            .padding(ContentLayout.quotePadding)
+            .background(ContentStyle.socialBackground)
+            .cornerRadius(ContentLayout.cardCornerRadius)
             
             // 下方文本（如果有）
             let remainingLines = item.content.components(separatedBy: .newlines)
@@ -435,6 +446,20 @@ private struct SocialMediaCardView: View {
             }
         }
     }
+}
+
+// MARK: - Layout & Style
+private enum ContentLayout {
+    static let imageMaxHeight: CGFloat = 300
+    static let quotePadding: CGFloat = 16
+    static let cardCornerRadius: CGFloat = 12
+    static let socialAvatarSize: CGFloat = 40
+}
+
+private enum ContentStyle {
+    static let quoteBackground = Color.gray.opacity(0.08)
+    static let socialBackground = Color.black.opacity(0.8)
+    static let externalLinkBackground = Color.gray.opacity(0.1)
 }
 
 #Preview {
