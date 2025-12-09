@@ -10,6 +10,7 @@ import SwiftUI
 #if os(macOS)
 struct HomeView_macOS: View {
     @Environment(HomeViewModel.self) private var viewModel
+    @Environment(\.modelContext) private var modelContext
     
     // MARK: - Body
     var body: some View {
@@ -23,6 +24,10 @@ struct HomeView_macOS: View {
                 sortParameter: $viewModel.sortParameter,
                 sortOrder: $viewModel.sortOrder
             )
+        }
+        .onAppear {
+            // 设置同步服务回调
+            MultipeerSyncService.shared.setupSyncHandlers(modelContext: modelContext)
         }
     }
 }

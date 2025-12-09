@@ -201,6 +201,7 @@ struct AddCardView: View {
     
     private var bottomToolbar: some View {
         HStack(spacing: 20) {
+#if os(iOS)
             HStack(spacing: 16) {
                 iconButton(system: "photo.on.rectangle") {
                     handleAddImage()
@@ -212,6 +213,7 @@ struct AddCardView: View {
             
             Divider()
                 .frame(height: 32)
+#endif
             
             Button(action: handleAutoTag) {
                 HStack(spacing: 6) {
@@ -381,6 +383,11 @@ struct AddCardView: View {
         if enableNotification {
             NotificationManager.shared.scheduleNotification(for: card)
         }
+        
+        // 同步到其他设备
+        #if os(iOS)
+        MultipeerSyncService.shared.syncCardToPeers(card)
+        #endif
     }
     
     private func setTomorrowMorning() {
@@ -490,3 +497,4 @@ private enum AddCardStyle {
 #Preview {
     AddCardView()
 }
+

@@ -21,6 +21,14 @@ struct MemoReadApp: App {
             HomeView()
                 .preferredColorScheme(selectedAppearance.colorScheme)
                 .environment(viewModel)
+                .onAppear {
+                    // 初始化多设备同步服务
+                    #if os(iOS)
+                    MultipeerSyncService.shared.start()
+                    #elseif os(macOS)
+                    MultipeerSyncService.shared.start()
+                    #endif
+                }
         }
         .modelContainer(for: ReadingCardModel.self)
     }

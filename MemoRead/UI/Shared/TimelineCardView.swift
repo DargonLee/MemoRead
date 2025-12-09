@@ -186,11 +186,18 @@ private struct CompleteButton: View {
 }
 
 // MARK: - Timeline Style & Layout
+// #F4F0EF
 private enum TimelineStyle {
     static let accent = Color.blue
     static let line = Color.blue.opacity(0.3)
     static let tagBackground = Color.gray.opacity(0.6)
+    #if os(iOS)
     static let cardBackground = Color(.systemBackground)
+    #elseif os(macOS)
+    static let cardBackground = Color(.windowBackgroundColor)
+    #else
+    static let cardBackground = Color.white
+    #endif
 }
 
 private enum TimelineLayout {
@@ -322,13 +329,23 @@ private struct SummarySheetView: View {
             }
             .padding()
             .navigationTitle("AI总结")
+#if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+#endif
             .toolbar {
+#if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("完成") {
                         dismiss()
                     }
                 }
+#elseif os(macOS)
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") {
+                        dismiss()
+                    }
+                }
+#endif
             }
         }
     }

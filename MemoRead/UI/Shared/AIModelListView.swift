@@ -35,6 +35,7 @@ struct AIModelListView: View {
             }
             .navigationTitle("AI Models")
             .toolbar {
+#if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         editingModel = nil
@@ -43,6 +44,16 @@ struct AIModelListView: View {
                         Image(systemName: "plus")
                     }
                 }
+#elseif os(macOS)
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(action: {
+                        editingModel = nil
+                        showAddModelSheet = true
+                    }) {
+                        Image(systemName: "plus")
+                    }
+                }
+#endif
             }
             .sheet(isPresented: $showAddModelSheet) {
                 AddAIModelView(

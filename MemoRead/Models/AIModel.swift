@@ -54,3 +54,4 @@ struct AIModel: Identifiable, Codable {
     static let defaultModels: [AIModel] = [.deepSeek, .openAI, .claude]
 }
 
+

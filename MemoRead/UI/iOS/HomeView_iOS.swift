@@ -11,6 +11,7 @@ import SwiftUI
 struct HomeView_iOS: View {
     // MARK: - Environment
     @Environment(HomeViewModel.self) private var viewModel
+    @Environment(\.modelContext) private var modelContext
     
     // MARK: - State
     @State private var isSettingPresented: Bool = false
@@ -43,6 +44,10 @@ struct HomeView_iOS: View {
                 AddButton(addAction: {
                     isAddCardPresented = true
                 })
+            }
+            .onAppear {
+                // 设置同步服务回调
+                MultipeerSyncService.shared.setupSyncHandlers(modelContext: modelContext)
             }
         }
     }

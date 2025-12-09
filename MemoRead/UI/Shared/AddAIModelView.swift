@@ -25,7 +25,7 @@ struct AddAIModelView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Model Information") {
+                Section(header: Text("Model Information")) {
                     TextField("Name", text: $name)
                     Picker("Provider", selection: $provider) {
                         ForEach(providers, id: \.self) { provider in
@@ -37,11 +37,15 @@ struct AddAIModelView: View {
                     }
                 }
                 
-                Section("API Configuration") {
+                Section(header: Text("API Configuration")) {
                     SecureField("API Key", text: $apiKey)
                     TextField("Base URL", text: $baseURL)
+#if os(iOS)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
+#elseif os(macOS)
+                        .disableAutocorrection(true)
+#endif
                 }
                 
                 Section {
@@ -61,7 +65,9 @@ struct AddAIModelView: View {
                 }
             }
             .navigationTitle(model == nil ? "Add AI Model" : "Edit AI Model")
+#if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+#endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -124,4 +130,5 @@ struct AddAIModelView: View {
         onCancel: { }
     )
 }
+
 
