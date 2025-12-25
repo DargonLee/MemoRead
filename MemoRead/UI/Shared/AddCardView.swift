@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 #if os(iOS)
 import PhotosUI
 #endif
@@ -19,7 +20,6 @@ private enum TimeOption {
     case custom
 }
 
-#endif
 struct AddCardView: View {
     // MARK: - State
     @Environment(\.dismiss) private var dismiss
@@ -31,12 +31,10 @@ struct AddCardView: View {
     @State private var showNotificationPicker = false
     @State private var selectedNotificationTime: Date = Date()
     @State private var selectedTimeOption: TimeOption = .custom
-#if os(iOS)
     @State private var showPhotoPicker = false
     @State private var showCameraPicker = false
     @State private var photoItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
-#endif
     
     // MARK: - Computed Properties
     private var hasValidContent: Bool {
@@ -52,12 +50,9 @@ struct AddCardView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    header
-#if os(iOS)
                     if selectedImage != nil {
                         imagePreviewView
                     }
-#endif
                     contentEditorView
                     notificationTimeView
                     bottomToolbar
@@ -65,12 +60,11 @@ struct AddCardView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 20)
             }
-            .background(AddCardStyle.background)
+            .background(ThemeStyle.background)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .sheet(isPresented: $showNotificationPicker) {
                 notificationPickerView
             }
-#if os(iOS)
             .photosPicker(
                 isPresented: $showPhotoPicker,
                 selection: $photoItem,
@@ -85,40 +79,28 @@ struct AddCardView: View {
             .onChange(of: photoItem) { _, newValue in
                 Task { await loadSelectedPhoto(newValue) }
             }
-#endif
+            .navigationTitle("New Note")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .foregroundColor(.gray)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveCard()
+                        dismiss()
+                    }
+                    .disabled(!hasValidContent)
+                    .foregroundColor(hasValidContent ? ThemeStyle.accent : .gray.opacity(0.6))
+                }
+            }
         }
     }
     
     // MARK: - Views
-    
-    private var header: some View {
-        HStack {
-            Button("Cancel") {
-                dismiss()
-            }
-            .foregroundColor(.gray)
-            
-            Spacer()
-            
-            Text("New Note")
-                .font(.title2.bold())
-            
-            Spacer()
-            
-            Button("Save") {
-                saveCard()
-                dismiss()
-            }
-            .disabled(!hasValidContent)
-            .foregroundColor(hasValidContent ? AddCardStyle.accent : .gray.opacity(0.6))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(hasValidContent ? AddCardStyle.accent.opacity(0.1) : Color.clear)
-            .cornerRadius(20)
-        }
-    }
-    
-#if os(iOS)
     private var imagePreviewView: some View {
         ZStack(alignment: .topTrailing) {
             if let image = selectedImage {
@@ -148,18 +130,13 @@ struct AddCardView: View {
             }
         }
     }
-#endif
     
     private var contentEditorView: some View {
         ZStack(alignment: .topLeading) {
             TextEditor(text: $content)
                 .font(.body)
-#if os(macOS)
-                .frame(height: 150)
-#else
                 .frame(minHeight: 100)
-#endif
-                .textEditorPadding()
+                .padding(8)
                 .background(Color.white.opacity(0.6))
                 .cornerRadius(16)
             
@@ -186,7 +163,7 @@ struct AddCardView: View {
     private var notificationTimeView: some View {
         HStack {
             Image(systemName: "bell")
-                .foregroundColor(AddCardStyle.accent)
+                .foregroundColor(ThemeStyle.accent)
             Text(selectedNotificationTime.formatted(date: .abbreviated, time: .shortened))
                 .foregroundColor(.gray)
             Spacer()
@@ -214,9 +191,9 @@ struct AddCardView: View {
             Button(action: handleAutoTag) {
                 HStack(spacing: 6) {
                     Image(systemName: "brain.head.profile")
-                        .foregroundColor(AddCardStyle.accent)
+                        .foregroundColor(ThemeStyle.accent)
                     Text("Auto-tag")
-                        .foregroundColor(AddCardStyle.accent)
+                        .foregroundColor(ThemeStyle.accent)
                         .font(.headline)
                 }
             }
@@ -263,7 +240,6 @@ struct AddCardView: View {
         }
         .buttonStyle(TimeButtonStyle(isSelected: selectedTimeOption == .custom))
     }
-#if os(iOS)
     private var navigationBarButtons: some ToolbarContent {
         Group {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -281,12 +257,11 @@ struct AddCardView: View {
                     saveCard()
                     dismiss()
                 }
-                .disabled(content.isEmpty)
-                .foregroundColor(content.isEmpty ? .gray.opacity(0.6) : .primary)
+                    .disabled(content.isEmpty)
+                    .foregroundColor(content.isEmpty ? .gray.opacity(0.6) : ThemeStyle.accent)
             }
         }
     }
-#endif
     
     private var notificationPickerView: some View {
         NavigationStack {
@@ -310,37 +285,13 @@ struct AddCardView: View {
         }
     }
     
-    // MARK: - macOS Navigation Bar Buttons
-#if os(macOS)
-    private var macOSNavigationBarButtons: some ToolbarContent {
-        Group {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    dismiss()
-                }
-            }
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Save") {
-                    saveCard()
-                    dismiss()
-                }
-                .disabled(content.isEmpty)
-            }
-        }
-    }
-#endif
-    
     // MARK: - Actions
     private func handleAddImage() {
-        #if os(iOS)
         showPhotoPicker = true
-        #endif
     }
     
     private func handleTakePhoto() {
-        #if os(iOS)
         showCameraPicker = true
-        #endif
     }
     
     private func handleAutoTag() {
@@ -409,7 +360,6 @@ struct AddCardView: View {
         ) ?? Date()
     }
     
-#if os(iOS)
     // MARK: - Image helpers
     private func applySelectedImage(_ image: UIImage) {
         selectedImage = image
@@ -429,16 +379,14 @@ struct AddCardView: View {
             print("Photo load error: \(error.localizedDescription)")
         }
     }
-#endif
 }
 
-#if os(iOS)
 // MARK: - Helpers
 private func iconButton(system: String, action: @escaping () -> Void) -> some View {
     Button(action: action) {
         Image(systemName: system)
             .font(.title3)
-            .foregroundColor(AddCardStyle.accent)
+            .foregroundColor(ThemeStyle.accent)
             .frame(width: 44, height: 44)
             .background(Color.white.opacity(0.7))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -482,15 +430,8 @@ private struct CameraPickerView: UIViewControllerRepresentable {
         }
     }
 }
-#endif
-
-// MARK: - Styles
-private enum AddCardStyle {
-    static let accent = Color.purple
-    static let background = Color.white.opacity(0.9)
-}
-
 #Preview {
     AddCardView()
 }
 
+#endif
