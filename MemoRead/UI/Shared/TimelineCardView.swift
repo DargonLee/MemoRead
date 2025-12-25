@@ -12,24 +12,16 @@ struct TimelineCardView: View {
     @Environment(\.modelContext) private var modelContext
     let item: ReadingCardModel
     let isLast: Bool
-    @State private var isCompleted: Bool
     @State private var isSynced: Bool
     @State private var showSummarySheet = false
     @State private var summaryText: String = ""
     @State private var isGeneratingSummary = false
     private var type: ReadingCardModel.ReadingCardType
-    private var cardTag: String {
-        if let tag = item.extractedTag {
-            return tag
-        }
-        return type == .link ? "Design" : type.name
-    }
     
     // MARK: - Initialization
     init(item: ReadingCardModel, isLast: Bool = false) {
         self.item = item
         self.isLast = isLast
-        _isCompleted = State(initialValue: item.isCompleted)
         _isSynced = State(initialValue: item.isSynced)
         self.type = ReadingCardModel.ReadingCardType(rawValue: item.type)!
     }
@@ -41,22 +33,26 @@ struct TimelineCardView: View {
             timelineIndicator
             
             // 右侧内容区域
-            VStack(alignment: .leading, spacing: TimelineLayout.sectionSpacing) {
-                // 顶部：时间戳 + 标签 水平排列
+            VStack(alignment: .leading, spacing: 8) {
+                // 1. 顶部：时间戳 + 状态图标
                 headerView
                 
-                // 中部：内容区域撑满
-                ReadingCardContentView(item: item)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                
-                // 底部：操作区域
-                actionView
+                // 2. 白色卡片区域
+                VStack(alignment: .leading, spacing: 16) {
+                    ReadingCardContentView(item: item)
+                    
+                    // 3. 底部：标签 + 操作按钮
+                    footerView
+                }
+                .padding(16)
+                .background(TimelineStyle.cardBackground)
+                .cornerRadius(20)
+                .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, TimelineLayout.horizontalPadding)
-        .padding(.vertical, TimelineLayout.verticalPadding)
-        .background(TimelineStyle.cardBackground)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(TimelineStyle.listBackground)
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
                 handleDelete()
@@ -78,64 +74,110 @@ struct TimelineCardView: View {
     
     // MARK: - Timeline Indicator
     private var timelineIndicator: some View {
-        TimelineIndicator(
-            isLast: isLast,
-            accent: TimelineStyle.accent,
-            line: TimelineStyle.line
-        )
-        .frame(width: TimelineLayout.timelineWidth, alignment: .center)
+        VStack(spacing: 0) {
+            Circle()
+                .fill(TimelineStyle.accent)
+                .frame(width: TimelineLayout.dotSize, height: TimelineLayout.dotSize)
+                .overlay(
+                    Circle()
+                        .stroke(Color.white, lineWidth: 2)
+                )
+                .padding(.top, 4) // 对齐时间文本
+            
+            if !isLast {
+                Rectangle()
+                    .fill(TimelineStyle.line)
+                    .frame(width: TimelineLayout.lineWidth)
+                    .padding(.vertical, 4)
+            } else {
+                Spacer()
+            }
+        }
     }
     
     // MARK: - Header View
     private var headerView: some View {
-        HStack(spacing: 8) {
+        HStack {
             Text(item.createdAt.timeAgoDisplay())
-                .font(.caption)
-                .foregroundColor(.primary)
-            
-            TagView(tag: cardTag)
-
-            SyncStatusBadge(isSynced: isSynced, lastSyncedAt: item.lastSyncedAt)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
             
             Spacer()
+            
+            HStack(spacing: 10) {
+                // 类型图标 (如果是链接或图片)
+                if type != ReadingCardModel.ReadingCardType.text {
+                    Image(systemName: type.icon)
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary.opacity(0.6))
+                }
+                
+                // 同步/完成状态
+                if isSynced {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.green.opacity(0.8))
+                } else {
+                    Image(systemName: "clock")
+                        .font(.system(size: 14))
+                        .foregroundColor(.orange.opacity(0.8))
+                }
+            }
         }
+        .padding(.trailing, 4)
     }
     
-    // MARK: - Action View
-    private var actionView: some View {
-        HStack(spacing: 12) {
+    // MARK: - Footer View
+    private var footerView: some View {
+        HStack(alignment: .center) {
+            // 标签
+            HStack(spacing: 8) {
+                if let tag = item.extractedTag {
+                    Text("#\(tag)")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary.opacity(0.7))
+                } else {
+                    Text("#\(type.name)")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary.opacity(0.7))
+                }
+            }
+            
             Spacer()
-            // AI总结按钮
-            AISummaryButton(action: handleAISummary)
-            // 复制按钮
-            CompleteButton(
-                type: self.type,
-                isCompleted: $isCompleted,
-                action: handleComplete
-            )
+            
+            // 操作按钮
+            HStack(spacing: 20) {
+                AISummaryButton(action: handleAISummary)
+                
+                Button(action: {
+                    item.content.copyToClipboard()
+                }) {
+                    Image(systemName: "doc.on.doc")
+                        .font(.system(size: 16))
+                        .foregroundColor(.secondary.opacity(0.6))
+                }
+                
+                Button(action: {
+                    handleShare()
+                }) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 16))
+                        .foregroundColor(.secondary.opacity(0.6))
+                }
+            }
         }
     }
     
     // MARK: - Actions
-    private func handleComplete() {
-        // 复制内容到剪贴板
-        item.content.copyToClipboard()
-        
-        // 更新本地状态
-        isCompleted = true
-        
-        // 更新数据模型
-        item.isCompleted = true
-        item.completedAt = Date()
-        
-        // 保存到数据库
-        do {
-            try modelContext.save()
-        } catch {
-            print("Failed to save completion status: \(error.localizedDescription)")
-            // 如果保存失败，回滚本地状态
-            isCompleted = false
+    private func handleShare() {
+        // 分享逻辑
+        #if os(iOS)
+        let activityVC = UIActivityViewController(activityItems: [item.content], applicationActivities: nil)
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootVC = windowScene.windows.first?.rootViewController {
+            rootVC.present(activityVC, animated: true)
         }
+        #endif
     }
     
     private func handleAISummary() {
@@ -188,127 +230,34 @@ struct TimelineCardView: View {
     }
 }
 
-// MARK: - Tag View
-private struct TagView: View {
-    let tag: String
-    
-    var body: some View {
-        Text(tag.hasPrefix("#") ? tag : "#\(tag)")
-            .font(.caption)
-            .foregroundColor(.white)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(TimelineStyle.tagBackground)
-            .cornerRadius(6)
-    }
-}
-
-// MARK: - Complete Button
-private struct CompleteButton: View {
-    let type: ReadingCardModel.ReadingCardType
-    @Binding var isCompleted: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Group {
-                if isCompleted {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title3)
-                        .foregroundColor(.gray)
-                } else if type == .image {
-                    Image(systemName: "square.and.arrow.down")
-                        .font(.title3)
-                        .foregroundColor(.blue)
-                } else {
-                    Image(systemName: "doc.on.doc")
-                        .font(.title3)
-                        .foregroundColor(.blue)
-                }
-            }
-            .frame(width: ButtonLayout.minimumSize, height: ButtonLayout.minimumSize)
-        }
-        .disabled(isCompleted)
-    }
-}
-
-// MARK: - Sync Status Badge
-private struct SyncStatusBadge: View {
-    let isSynced: Bool
-    let lastSyncedAt: Date?
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: isSynced ? "checkmark.seal.fill" : "icloud.slash")
-                .font(.caption)
-                .foregroundColor(isSynced ? .green : .orange)
-
-            Text(statusText)
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(isSynced ? Color.green.opacity(0.12) : Color.orange.opacity(0.12))
-        .cornerRadius(8)
-    }
-
-    private var statusText: String {
-        if isSynced, let lastSyncedAt {
-            return "已同步 · \(lastSyncedAt.timeAgoDisplay())"
-        }
-        return "待同步"
-    }
-}
-
-// MARK: - Timeline Style & Layout
-// #F4F0EF
+// MARK: - Style & Layout
 private enum TimelineStyle {
     static let accent = Color.blue
     static let line = Color.blue.opacity(0.3)
-    static let tagBackground = Color.gray.opacity(0.6)
-    #if os(iOS)
-    static let cardBackground = Color(.systemBackground)
-    #elseif os(macOS)
-    static let cardBackground = Color(.windowBackgroundColor)
-    #else
-    static let cardBackground = Color.white
-    #endif
+    
+    static var cardBackground: Color {
+        #if os(iOS)
+        return Color(.secondarySystemGroupedBackground)
+        #elseif os(macOS)
+        return Color(.windowBackgroundColor)
+        #else
+        return .white
+        #endif
+    }
+    
+    static var listBackground: Color {
+        #if os(iOS)
+        return Color(.systemGroupedBackground)
+        #else
+        return Color.clear
+        #endif
+    }
 }
 
 private enum TimelineLayout {
-    static let horizontalSpacing: CGFloat = 12
-    static let sectionSpacing: CGFloat = 12
-    static let horizontalPadding: CGFloat = 16
-    static let verticalPadding: CGFloat = 8
-    static let timelineWidth: CGFloat = 12
-    static let dotSize: CGFloat = 10
+    static let horizontalSpacing: CGFloat = 16
+    static let dotSize: CGFloat = 12
     static let lineWidth: CGFloat = 2
-    static let lineMinHeight: CGFloat = 50
-    static let lineTopPadding: CGFloat = 4
-}
-
-// MARK: - Timeline Indicator
-private struct TimelineIndicator: View {
-    let isLast: Bool
-    let accent: Color
-    let line: Color
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            Circle()
-                .fill(accent)
-                .frame(width: TimelineLayout.dotSize, height: TimelineLayout.dotSize)
-            
-            if !isLast {
-                Rectangle()
-                    .fill(line)
-                    .frame(width: TimelineLayout.lineWidth)
-                    .frame(minHeight: TimelineLayout.lineMinHeight)
-                    .padding(.top, TimelineLayout.lineTopPadding)
-            }
-        }
-    }
 }
 
 // MARK: - AI Summary Button
@@ -328,14 +277,13 @@ private struct AISummaryButton: View {
             Group {
                 if isProcessing {
                     ProgressView()
-                        .scaleEffect(1.0)
+                        .scaleEffect(0.8)
                 } else {
                     Image(systemName: "sparkles")
-                        .font(.title3)
-                        .foregroundColor(.blue)
+                        .font(.body)
+                        .foregroundColor(.secondary)
                 }
             }
-            .frame(width: ButtonLayout.minimumSize, height: ButtonLayout.minimumSize)
         }
         .disabled(isProcessing)
     }
