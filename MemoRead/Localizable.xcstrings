@@ -132,7 +132,7 @@
       }
     },
     "Create Reading Card" : {
-      "extractionState" : "stale",
+      "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -198,6 +198,16 @@
         }
       }
     },
+    "Enable Clipboard Auto Read" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启剪贴板自动读取"
+          }
+        }
+      }
+    },
     "Enable Notifications" : {
       "localizations" : {
         "zh-Hans" : {
@@ -230,6 +240,9 @@
           }
         }
       }
+    },
+    "Key" : {
+      "extractionState" : "manual"
     },
     "Last sync time: %@" : {
       "localizations" : {
@@ -451,6 +464,9 @@
 
     },
     "完成" : {
+
+    },
+    "开启后，应用将自动读取剪贴板中的内容并生成阅读卡片" : {
 
     },
     "当前 macOS 端暂未支持新建卡片，请在 iOS 端添加。" : {

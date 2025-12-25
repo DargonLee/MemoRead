@@ -15,6 +15,7 @@ struct SettingSection: Identifiable, Hashable {
     
     static let allSections: [SettingSection] = [
         .init(id: "sync", title: "Sync", icon: "arrow.triangle.2.circlepath"),
+        .init(id: "clipboard", title: "Clipboard", icon: "doc.on.doc"),
         .init(id: "notification", title: "Notification", icon: "bell"),
         .init(id: "ai_model", title: "AI Model", icon: "brain.head.profile"),
         .init(id: "appearance", title: "Appearance", icon: "paintbrush"),
@@ -33,6 +34,7 @@ struct SettingView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage("enableAutoSync") private var enableAutoSync = true
     @AppStorage("enableNotification") private var enableNotification = true
+    @AppStorage("enableClipboardAutoRead") private var enableClipboardAutoRead = false
     @AppStorage("app_appearance") private var selectedAppearance: Appearance = .automatic
     @State private var showClearDataAlert = false
     @AppStorage("lastSyncTime") private var lastSyncTime = Date()
@@ -137,6 +139,8 @@ private extension SettingView {
         switch section.id {
         case "sync":
             syncSection
+        case "clipboard":
+            clipboardSection
         case "notification":
             notificationSection
         case "ai_model":
@@ -153,6 +157,21 @@ private extension SettingView {
     }
     
     // MARK: - Section Views
+    private var clipboardSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Toggle("Enable Clipboard Auto Read", isOn: $enableClipboardAutoRead)
+#if os(macOS)
+                .toggleStyle(.switch)
+#endif
+
+            if enableClipboardAutoRead {
+                Text("开启后，应用将自动读取剪贴板中的内容并生成阅读卡片")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+    
     private var syncSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Toggle("iCloud Sync", isOn: $enableAutoSync)
