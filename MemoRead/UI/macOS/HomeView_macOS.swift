@@ -28,6 +28,40 @@ struct HomeView_macOS: View {
         .onAppear {
             // 设置同步服务回调
             MultipeerSyncService.shared.setupSyncHandlers(modelContext: modelContext)
+            configureSyncCallbacks()
+        }
+    }
+    
+    // MARK: - Sync Callbacks
+    private func configureSyncCallbacks() {
+        let service = MultipeerSyncService.shared
+        
+        service.onPeerConnected = { peer in
+            DispatchQueue.main.async {
+                // macOS 端连接后自动同步待同步数据
+                service.syncPendingCards(modelContext: modelContext)
+                service.syncPendingDeletions(modelContext: modelContext)
+            }
+        }
+        
+        service.onSyncCompleted = { success, error in
+            DispatchQueue.main.async {
+                if success {
+                    // 同步成功，发送本地通知
+                    NotificationManager.shared.sendInstantNotification(
+                        title: "✓ 数据同步完成",
+                        body: "所有数据已成功同步到已连接的设备",
+                        sound: true
+                    )
+                } else if error != nil {
+                    // 同步失败，发送错误通知
+                    NotificationManager.shared.sendInstantNotification(
+                        title: "⚠️ 同步失败",
+                        body: "数据同步时出现问题，请检查网络连接后重试",
+                        sound: false
+                    )
+                }
+            }
         }
     }
 }
