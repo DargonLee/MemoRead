@@ -66,7 +66,7 @@ private struct MemoListView: View {
     @Binding var sortParameter: ReadingCardSortParameter
     @Binding var sortOrder: ReadingCardSortOrder
     
-    @State private var showAddSheet: Bool = false
+    @State private var showUnsupportedAlert: Bool = false
     
     var body: some View {
         ZStack {
@@ -85,12 +85,14 @@ private struct MemoListView: View {
 #endif
                 sortButton
             }
-            .sheet(isPresented: $showAddSheet) {
-                AddCardView()
-            }
             AddButton(addAction: {
-                showAddSheet = true
+                showUnsupportedAlert = true
             })
+        }
+        .alert("暂不支持添加", isPresented: $showUnsupportedAlert) {
+            Button("好的", role: .cancel) { }
+        } message: {
+            Text("当前 macOS 端暂未支持新建卡片，请在 iOS 端添加。")
         }
     }
     

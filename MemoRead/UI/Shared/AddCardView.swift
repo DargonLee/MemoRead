@@ -10,6 +10,8 @@ import SwiftUI
 import PhotosUI
 #endif
 
+#if os(iOS)
+
 // MARK: - Time Option
 private enum TimeOption {
     case tomorrowMorning
@@ -17,6 +19,7 @@ private enum TimeOption {
     case custom
 }
 
+#endif
 struct AddCardView: View {
     // MARK: - State
     @Environment(\.dismiss) private var dismiss
@@ -49,7 +52,6 @@ struct AddCardView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    topHandle
                     header
 #if os(iOS)
                     if selectedImage != nil {
@@ -88,12 +90,6 @@ struct AddCardView: View {
     }
     
     // MARK: - Views
-    private var topHandle: some View {
-        Capsule()
-            .fill(Color.gray.opacity(0.2))
-            .frame(width: 40, height: 8)
-            .padding(.top, 4)
-    }
     
     private var header: some View {
         HStack {

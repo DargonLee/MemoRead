@@ -41,7 +41,7 @@ struct HomeView_iOS: View {
                 }
                 .sheet(isPresented: $isAddCardPresented) {
                     AddCardView()
-                        .presentationDetents([.medium])
+                        .presentationDetents([.medium, .large])
                 }
                 AddButton(addAction: {
                     isAddCardPresented = true
