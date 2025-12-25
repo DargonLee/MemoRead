@@ -105,6 +105,7 @@
       }
     },
     "Completed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -276,6 +277,12 @@
     "New Note" : {
 
     },
+    "No Cards" : {
+
+    },
+    "No reading cards found. Add cards on iOS device to sync." : {
+
+    },
     "Not Set" : {
 
     },
@@ -346,6 +353,7 @@
 
     },
     "Setting" : {
+      "extractionState" : "stale",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {

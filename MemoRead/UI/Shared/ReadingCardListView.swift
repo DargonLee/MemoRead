@@ -9,7 +9,6 @@ import SwiftUI
 import SwiftData
 
 struct ReadingCardListView: View {
-    @Environment(HomeViewModel.self) private var viewModel
     @Environment(\.modelContext) private var context
     
     @Query private var readingCards: [ReadingCardModel]
@@ -37,20 +36,30 @@ struct ReadingCardListView: View {
     }
     
     var body: some View {
-        List {
-            ForEach(Array(readingCards.enumerated()), id: \.element.id) { index, item in
-                TimelineCardView(
-                    item: item,
-                    isLast: index == readingCards.count - 1
+        Group {
+            if readingCards.isEmpty {
+                ContentUnavailableView(
+                    "No Cards",
+                    systemImage: "book.closed",
+                    description: Text("No reading cards found. Add cards on iOS device to sync.")
                 )
-                .listRowInsets(EdgeInsets())
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
-                .padding(.bottom, index == readingCards.count - 1 ? 16 : 0)
+            } else {
+                List {
+                    ForEach(Array(readingCards.enumerated()), id: \.element.id) { index, item in
+                        TimelineCardView(
+                            item: item,
+                            isLast: index == readingCards.count - 1
+                        )
+                        .listRowInsets(EdgeInsets())
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .padding(.bottom, index == readingCards.count - 1 ? 16 : 0)
+                    }
+                }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
             }
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .background(Color.clear)
     }
 }

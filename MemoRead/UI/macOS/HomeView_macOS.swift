@@ -16,80 +16,12 @@ struct HomeView_macOS: View {
     var body: some View {
         @Bindable var viewModel = viewModel
         
-        NavigationSplitView {
-            SidebarView(sortParameter: $viewModel.sortParameter)
-        } detail: {
+        NavigationStack {
             MemoListView(
                 searchText: $viewModel.searchText,
                 sortParameter: $viewModel.sortParameter,
                 sortOrder: $viewModel.sortOrder
             )
-        }
-        .onAppear {
-            // 设置同步服务回调
-            MultipeerSyncService.shared.setupSyncHandlers(modelContext: modelContext)
-            configureSyncCallbacks()
-        }
-    }
-    
-    // MARK: - Sync Callbacks
-    private func configureSyncCallbacks() {
-        let service = MultipeerSyncService.shared
-        
-        service.onPeerConnected = { peer in
-            DispatchQueue.main.async {
-                // macOS 端连接后自动同步待同步数据
-                service.syncPendingCards(modelContext: modelContext)
-                service.syncPendingDeletions(modelContext: modelContext)
-            }
-        }
-        
-        service.onSyncCompleted = { success, error in
-            DispatchQueue.main.async {
-                if success {
-                    // 同步成功，发送本地通知
-                    NotificationManager.shared.sendInstantNotification(
-                        title: "✓ 数据同步完成",
-                        body: "所有数据已成功同步到已连接的设备",
-                        sound: true
-                    )
-                } else if error != nil {
-                    // 同步失败，发送错误通知
-                    NotificationManager.shared.sendInstantNotification(
-                        title: "⚠️ 同步失败",
-                        body: "数据同步时出现问题，请检查网络连接后重试",
-                        sound: false
-                    )
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Sidebar View
-private struct SidebarView: View {
-    @Binding var sortParameter: ReadingCardSortParameter
-    @State private var showSettings = false
-    
-    var body: some View {
-        List(selection: $sortParameter) {
-            ForEach(SidebarItem.allCases) { item in
-                NavigationLink(value: item.type) {
-                    Label(item.title, systemImage: item.icon)
-                }
-            }
-        }
-        .listStyle(.sidebar)
-        .safeAreaInset(edge: .bottom) {
-            Button(action: { showSettings.toggle() }) {
-                Label("Setting", systemImage: "gearshape")
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(8)
-            }
-            .buttonStyle(.borderless)
-        }
-        .sheet(isPresented: $showSettings) {
-            SettingView()
         }
     }
 }
@@ -104,14 +36,12 @@ private struct MemoListView: View {
     
     var body: some View {
         ZStack {
-            VStack {
-                ReadingCardListView(
-                    searchText: searchText,
-                    sortParameter: sortParameter,
-                    sortOrder: sortOrder
-                )
-                .searchable(text: $searchText, prompt: "Search")
-            }
+            ReadingCardListView(
+                searchText: searchText,
+                sortParameter: sortParameter,
+                sortOrder: sortOrder
+            )
+            .searchable(text: $searchText, prompt: "Search")
             .navigationTitle("MemoRead")
             .toolbar {
 #if os(macOS)
@@ -119,6 +49,7 @@ private struct MemoListView: View {
 #endif
                 sortButton
             }
+            
             AddButton(addAction: {
                 showUnsupportedAlert = true
             })
