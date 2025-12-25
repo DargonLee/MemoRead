@@ -9,6 +9,7 @@ import Foundation
 import MultipeerConnectivity
 import SwiftData
 import OSLog
+import Combine
 
 #if os(iOS)
 import UIKit
@@ -87,8 +88,13 @@ struct CardData: Codable {
 }
 
 // MARK: - Multipeer Sync Service
-class MultipeerSyncService: NSObject {
+class MultipeerSyncService: NSObject, ObservableObject {
     static let shared = MultipeerSyncService()
+    
+    // MARK: - Published Properties
+    @Published var isSearching: Bool = false
+    @Published var isConnected: Bool = false
+    @Published var connectedDeviceNames: [String] = []
     
     // MARK: - Properties
     private let serviceType = "memoread-sync"
@@ -108,6 +114,10 @@ class MultipeerSyncService: NSObject {
     private var connectedPeers: Set<MCPeerID> = [] {
         didSet {
             let deviceNames = connectedPeers.map { $0.displayName }
+            DispatchQueue.main.async {
+                self.isConnected = !self.connectedPeers.isEmpty
+                self.connectedDeviceNames = deviceNames
+            }
             onConnectedDevicesChanged?(deviceNames)
         }
     }
@@ -197,12 +207,18 @@ class MultipeerSyncService: NSObject {
         serviceAdvertiser?.delegate = self
         serviceAdvertiser?.startAdvertisingPeer()
         
+        DispatchQueue.main.async {
+            self.isSearching = true
+        }
         logger.info("开始广播服务")
     }
     
     func stopAdvertising() {
         serviceAdvertiser?.stopAdvertisingPeer()
         serviceAdvertiser = nil
+        DispatchQueue.main.async {
+            self.isSearching = false
+        }
         logger.info("停止广播服务")
     }
     
@@ -213,12 +229,18 @@ class MultipeerSyncService: NSObject {
         serviceBrowser?.delegate = self
         serviceBrowser?.startBrowsingForPeers()
         
+        DispatchQueue.main.async {
+            self.isSearching = true
+        }
         logger.info("开始浏览服务")
     }
     
     func stopBrowsing() {
         serviceBrowser?.stopBrowsingForPeers()
         serviceBrowser = nil
+        DispatchQueue.main.async {
+            self.isSearching = false
+        }
         logger.info("停止浏览服务")
     }
     

@@ -16,7 +16,6 @@ class ModelContainerService {
     static let shared = ModelContainerService()
     
     private init() {
-        print("🏗️ ModelContainerService 初始化开始")
         modelContainer = createModelContainer()
         if let container = modelContainer {
             print("✅ ModelContainer 创建成功: \(ObjectIdentifier(container))")
