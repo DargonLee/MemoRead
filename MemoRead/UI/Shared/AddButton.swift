@@ -14,19 +14,14 @@ struct AddButton: View {
     @State private var breathingScale: CGFloat = 1.0
     @State private var rotationAngle: Double = 0.0
     
-    // 根据平台和连接状态确定按钮颜色
+    // 根据连接状态确定按钮颜色
     private var buttonColor: Color {
         if syncService.isConnected {
             // 已连接：绿色
             return .green
         } else {
-            #if os(iOS)
-            // iOS 未连接：蓝色
-            return .blue
-            #elseif os(macOS)
-            // macOS 未连接：橙色
+            // 未连接：橙色
             return .orange
-            #endif
         }
     }
     
