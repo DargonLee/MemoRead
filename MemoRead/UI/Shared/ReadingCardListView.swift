@@ -37,20 +37,20 @@ struct ReadingCardListView: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                ForEach(Array(readingCards.enumerated()), id: \.element.id) { index, item in
-                    TimelineCardView(
-                        item: item,
-                        isLast: index == readingCards.count - 1
-                    )
-                    .padding(.bottom, index == readingCards.count - 1 ? 16 : 0)
-                }
+        List {
+            ForEach(Array(readingCards.enumerated()), id: \.element.id) { index, item in
+                TimelineCardView(
+                    item: item,
+                    isLast: index == readingCards.count - 1
+                )
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .padding(.bottom, index == readingCards.count - 1 ? 16 : 0)
             }
-            .padding(.vertical, 8)
         }
-        .background(
-            Color.clear
-        )
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Color.clear)
     }
 }

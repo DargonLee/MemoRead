@@ -86,6 +86,7 @@ struct HomeView_iOS: View {
                 syncAlertMessage = "已连接 \(peer.displayName)，开始检查未同步数据"
                 showSyncAlert = true
                 service.syncPendingCards(modelContext: modelContext)
+                service.syncPendingDeletions(modelContext: modelContext)
             }
         }
 

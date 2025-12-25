@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct TimelineCardView: View {
     @Environment(\.modelContext) private var modelContext
@@ -56,6 +57,13 @@ struct TimelineCardView: View {
         .padding(.horizontal, TimelineLayout.horizontalPadding)
         .padding(.vertical, TimelineLayout.verticalPadding)
         .background(TimelineStyle.cardBackground)
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button(role: .destructive) {
+                handleDelete()
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
         .sheet(isPresented: $showSummarySheet) {
             SummarySheetView(
                 content: item.content,
@@ -144,6 +152,38 @@ struct TimelineCardView: View {
                     summaryText = "生成总结时出错: \(error.localizedDescription)"
                 }
             }
+        }
+    }
+    
+    private func handleDelete() {
+        #if os(iOS)
+        let service = MultipeerSyncService.shared
+        
+        // 检查是否有连接的设备
+        if service.hasConnectedPeers {
+            // 有连接，立即同步删除
+            let syncSuccess = service.syncCardDeletion(item.id)
+            if syncSuccess {
+                // 同步成功，直接删除
+                modelContext.delete(item)
+            } else {
+                // 同步失败，标记为待删除
+                item.pendingDeletion = true
+            }
+        } else {
+            // 没有连接，标记为待删除，等待连接后同步
+            item.pendingDeletion = true
+        }
+        #else
+        // macOS 直接删除
+        modelContext.delete(item)
+        #endif
+        
+        // 保存更改
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to delete card: \(error.localizedDescription)")
         }
     }
 }

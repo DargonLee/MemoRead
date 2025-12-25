@@ -350,7 +350,17 @@ class MultipeerSyncService: NSObject {
         updateSyncState(for: card, success: success, modelContext: modelContext)
     }
     
-    func syncCardDeletion(_ cardId: UUID) {
+    /// 检查是否有连接的设备
+    var hasConnectedPeers: Bool {
+        return session != nil && !connectedPeers.isEmpty
+    }
+    
+    func syncCardDeletion(_ cardId: UUID) -> Bool {
+        guard hasConnectedPeers else {
+            logger.warning("没有连接的设备，删除操作将延迟到连接后同步")
+            return false
+        }
+        
         // 创建一个临时的 CardData 用于删除
         let cardData = CardData(
             id: cardId,
@@ -371,7 +381,38 @@ class MultipeerSyncService: NSObject {
             timestamp: Date()
         )
         
-        sendMessage(message)
+        return sendMessage(message)
+    }
+    
+    /// 同步所有待删除的卡片
+    func syncPendingDeletions(modelContext: ModelContext) {
+        guard hasConnectedPeers else {
+            logger.info("没有连接的设备，跳过待删除同步")
+            return
+        }
+        
+        let descriptor = FetchDescriptor<ReadingCardModel>(
+            predicate: #Predicate { $0.pendingDeletion == true }
+        )
+        
+        do {
+            let pendingCards = try modelContext.fetch(descriptor)
+            logger.info("开始同步 \(pendingCards.count) 个待删除的卡片")
+            
+            for card in pendingCards {
+                let success = syncCardDeletion(card.id)
+                if success {
+                    // 同步成功后，清除待删除标记并从数据库删除
+                    card.pendingDeletion = false
+                    modelContext.delete(card)
+                    logger.info("成功同步删除卡片: \(card.id)")
+                }
+            }
+            
+            try modelContext.save()
+        } catch {
+            logger.error("同步待删除卡片失败: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Sync State Helpers

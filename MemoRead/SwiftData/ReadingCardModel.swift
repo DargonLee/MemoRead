@@ -31,6 +31,7 @@ final class ReadingCardModel {
     var isCompleted: Bool = false
     var isSynced: Bool = false
     var lastSyncedAt: Date?
+    var pendingDeletion: Bool = false
 
     init(
         id: UUID = UUID(),
@@ -46,6 +47,7 @@ final class ReadingCardModel {
         self.isCompleted = false
         self.isSynced = false
         self.lastSyncedAt = nil
+        self.pendingDeletion = false
     }
     
     private static func determineType(for content: String) -> ReadingCardType.RawValue {
