@@ -13,19 +13,56 @@ struct SettingSection: Identifiable, Hashable {
     let title: String
     let icon: String
     
-    static let allSections: [SettingSection] = [
-        .init(id: "sync", title: "Sync", icon: "arrow.triangle.2.circlepath"),
-        .init(id: "clipboard", title: "Clipboard", icon: "doc.on.doc"),
-        .init(id: "notification", title: "Notification", icon: "bell"),
-        .init(id: "ai_model", title: "AI Model", icon: "brain.head.profile"),
-        .init(id: "appearance", title: "Appearance", icon: "paintbrush"),
-        .init(id: "data", title: "Data Management", icon: "externaldrive"),
-        .init(id: "about", title: "About", icon: "info.circle")
-    ]
-    
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
+}
+
+// MARK: - Setting Group Model
+struct SettingGroup: Identifiable, Equatable {
+    let id: String
+    let title: String
+    let sections: [SettingSection]
+    
+    static let allGroups: [SettingGroup] = [
+        .init(
+            id: "sync_data",
+            title: "同步与数据",
+            sections: [
+                .init(id: "sync", title: "Sync", icon: "arrow.triangle.2.circlepath"),
+                .init(id: "clipboard", title: "Clipboard", icon: "doc.on.doc"),
+                .init(id: "data", title: "Data Management", icon: "externaldrive")
+            ]
+        ),
+        .init(
+            id: "notifications",
+            title: "通知与提醒",
+            sections: [
+                .init(id: "notification", title: "Notification", icon: "bell")
+            ]
+        ),
+        .init(
+            id: "ai_features",
+            title: "AI 功能",
+            sections: [
+                .init(id: "ai_model", title: "AI Model", icon: "brain.head.profile")
+            ]
+        ),
+        .init(
+            id: "appearance",
+            title: "外观设置",
+            sections: [
+                .init(id: "appearance", title: "Appearance", icon: "paintbrush")
+            ]
+        ),
+        .init(
+            id: "about",
+            title: "关于",
+            sections: [
+                .init(id: "about", title: "About", icon: "info.circle")
+            ]
+        )
+    ]
 }
 
 struct SettingView: View {
@@ -42,10 +79,8 @@ struct SettingView: View {
     @State private var showAIModelList = false
     
 #if os(macOS)
-    @State private var selectedSection: SettingSection? = SettingSection.allSections.first
     private let minWidth: CGFloat = 600
     private let minHeight: CGFloat = 400
-    private let sidebarWidth: CGFloat = 200
 #endif
     
     var version: String {
@@ -96,9 +131,11 @@ struct SettingView: View {
 private extension SettingView {
     private var mainContentiOS: some View {
         Form {
-            ForEach(SettingSection.allSections) { section in
-                Section(section.title) {
-                    sectionContent(for: section)
+            ForEach(SettingGroup.allGroups) { group in
+                Section(group.title) {
+                    ForEach(group.sections) { section in
+                        sectionContent(for: section)
+                    }
                 }
             }
         }
@@ -109,17 +146,13 @@ private extension SettingView {
     
     private var mainContentmacOS: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                ForEach(SettingSection.allSections) { section in
-                    VStack(alignment: .leading, spacing: 16) {
-                        Label(section.title, systemImage: section.icon)
-                            .font(.headline)
-                        sectionContent(for: section)
-                            .padding(.leading)
-                    }
+            VStack(alignment: .leading, spacing: 32) {
+                ForEach(SettingGroup.allGroups) { group in
+                    macOSGroupCard(group)
                     
-                    if section != SettingSection.allSections.last {
+                    if group != SettingGroup.allGroups.last {
                         Divider()
+                            .padding(.vertical, 8)
                     }
                 }
             }
@@ -128,6 +161,45 @@ private extension SettingView {
 #if os(macOS)
         .frame(minWidth: minWidth, minHeight: minHeight)
 #endif
+    }
+
+    // MARK: - macOS Group Card
+    private func macOSGroupCard(_ group: SettingGroup) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(group.title)
+                .font(.headline)
+                .foregroundColor(.primary)
+            
+            VStack(alignment: .leading, spacing: 16) {
+                ForEach(group.sections) { section in
+                    macOSSectionRow(section)
+                    
+                    if section != group.sections.last {
+                        Divider()
+                            .padding(.leading, 28)
+                    }
+                }
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .cornerRadius(8)
+        }
+    }
+
+    // MARK: - macOS Section Row
+    private func macOSSectionRow(_ section: SettingSection) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: section.icon)
+                    .foregroundColor(.secondary)
+                    .frame(width: 20)
+                Text(section.title)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            sectionContent(for: section)
+                .padding(.leading, 28)
+        }
     }
 }
 

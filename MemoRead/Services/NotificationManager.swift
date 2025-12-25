@@ -65,8 +65,8 @@ class NotificationManager {
         guard let reminderAt = card.reminderAt else { return }
         
         // 确保有权限后再安排通知
-        ensureAuthorization { [weak self] authorized in
-            guard authorized, let self = self else {
+        ensureAuthorization { authorized in
+            guard authorized else {
                 print("通知权限未授权，无法安排提醒通知")
                 return
             }
