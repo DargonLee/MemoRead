@@ -16,7 +16,13 @@ class ModelContainerService {
     static let shared = ModelContainerService()
     
     private init() {
+        print("🏗️ ModelContainerService 初始化开始")
         modelContainer = createModelContainer()
+        if let container = modelContainer {
+            print("✅ ModelContainer 创建成功: \(ObjectIdentifier(container))")
+        } else {
+            print("❌ ModelContainer 创建失败")
+        }
     }
     
     // MARK: - Container Creation
@@ -29,7 +35,7 @@ class ModelContainerService {
             schema: schema,
             cloudKitDatabase: enableAutoSync ? .automatic : .none
         )
-        
+                
         do {
             let container = try ModelContainer(
                 for: schema,
@@ -37,9 +43,8 @@ class ModelContainerService {
             )
             return container
         } catch {
-            // Consider logging the error for debugging purposes
-            print("Error creating ModelContainer: \(error)")
-            return nil // Return nil to avoid fatalError and allow graceful failure
+            print("❌ 创建 ModelContainer 失败: \(error)")
+            return nil
         }
     }
 }

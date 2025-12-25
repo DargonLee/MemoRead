@@ -33,8 +33,8 @@ struct HomeView_iOS: View {
                     Text(syncAlertMessage)
                 }
                 .onAppear {
-                    // 设置同步服务回调
-                    configureSyncService()
+                    // 仅设置 UI 相关的回调（如弹窗提示）
+                    configureSyncCallbacks()
                 }
         }
         
@@ -85,13 +85,9 @@ struct HomeView_iOS: View {
     }
 
     // MARK: - Sync
-    private func configureSyncService() {
+    private func configureSyncCallbacks() {
         let service = MultipeerSyncService.shared
-        service.setupSyncHandlers(modelContext: modelContext)
-        configureSyncCallbacks(service: service)
-    }
-    
-    private func configureSyncCallbacks(service: MultipeerSyncService) {
+        
         service.onPeerConnected = { peer in
             DispatchQueue.main.async {
                 syncAlertMessage = "已连接 \(peer.displayName)，开始检查未同步数据"

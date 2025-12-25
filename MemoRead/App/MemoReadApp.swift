@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 #if os(macOS)
 import AppKit
@@ -28,32 +29,63 @@ struct MemoReadApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     #endif
 
+    init() {
+        print("\n========================================")
+        print("🚀 MemoReadApp.init() 开始")
+        print("========================================")
+        
+        // 1. 启动同步服务
+        print("📡 启动 MultipeerSyncService...")
+        MultipeerSyncService.shared.start()
+        
+        // 2. 立即设置全局同步处理器
+        // 使用 mainContext 确保同步的数据能立即在 UI 上反映出来
+        if let container = ModelContainerService.shared.modelContainer {
+            print("📦 获取到 ModelContainer: \(ObjectIdentifier(container))")
+            let context = container.mainContext
+            print("🎯 获取到 mainContext: \(ObjectIdentifier(context))")
+            MultipeerSyncService.shared.setupSyncHandlers(modelContext: context)
+            print("✅ App Init: 已通过 ModelContainer.mainContext 设置全局同步处理器")
+        } else {
+            print("❌ App Init: ModelContainer 为 nil，无法设置同步处理器")
+        }
+        
+        print("========================================\n")
+    }
+
     var body: some Scene {
         #if os(iOS)
         WindowGroup {
             HomeView()
                 .preferredColorScheme(selectedAppearance.colorScheme)
                 .environment(viewModel)
-                .onAppear {
-                    MultipeerSyncService.shared.start()
-                }
         }
-        .modelContainer(for: ReadingCardModel.self)
+        .modelContainer({
+            if let container = ModelContainerService.shared.modelContainer {
+                print("📱 iOS Scene: 使用 ModelContainerService 的容器: \(ObjectIdentifier(container))")
+                return container
+            } else {
+                print("⚠️ iOS Scene: ModelContainerService 容器为 nil，创建默认容器")
+                return try! ModelContainer(for: ReadingCardModel.self)
+            }
+        }())
         #elseif os(macOS)
         // macOS 使用菜单栏模式
         MenuBarExtra {
-            MenuBarContentView()
-                .preferredColorScheme(selectedAppearance.colorScheme)
-                .environment(viewModel)
-                .frame(minWidth: 600, minHeight: 700)
-                .onAppear {
-                    MultipeerSyncService.shared.start()
-                }
+            if let container = ModelContainerService.shared.modelContainer {
+               let _ = print("💻 macOS Scene: 使用 ModelContainerService 的容器: \(ObjectIdentifier(container))")
+                MenuBarContentView()
+                    .preferredColorScheme(selectedAppearance.colorScheme)
+                    .environment(viewModel)
+                    .modelContext(container.mainContext)
+                    .frame(minWidth: 600, minHeight: 700)
+            } else {
+                Text("Error: Model Container not available")
+            }
         } label: {
             Image(systemName: "book.fill")
         }
         .menuBarExtraStyle(.window)
-        .modelContainer(for: ReadingCardModel.self)
         #endif
     }
 }
@@ -67,9 +99,19 @@ private struct MenuBarContentView: View {
     var body: some View {
         HomeView_macOS()
             .onAppear {
-                // 设置同步服务回调
+                print("\n========================================")
+                print("🪟 MenuBarContentView.onAppear")
+                print("========================================")
+                print("📦 窗口的 modelContext: \(ObjectIdentifier(modelContext))")
+                
+                // ⚠️ 关键修复：用窗口的 modelContext 重新设置同步处理器
+                // 这样数据会保存到窗口正在使用的 context 中
+                print("🔄 用窗口的 modelContext 重新设置同步处理器...")
                 MultipeerSyncService.shared.setupSyncHandlers(modelContext: modelContext)
+                
+                // 窗口显示时，设置 UI 相关的回调（如通知显示）
                 configureSyncCallbacks()
+                print("========================================\n")
             }
     }
     
@@ -77,7 +119,7 @@ private struct MenuBarContentView: View {
     private func configureSyncCallbacks() {
         let service = MultipeerSyncService.shared
         
-        service.onPeerConnected = { peer in
+        service.onPeerConnected = { [modelContext] peer in
             DispatchQueue.main.async {
                 // macOS 端连接后自动同步待同步数据
                 service.syncPendingCards(modelContext: modelContext)

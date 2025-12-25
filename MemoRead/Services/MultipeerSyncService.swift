@@ -309,10 +309,14 @@ class MultipeerSyncService: NSObject {
     }
     
     private func handleCardSync(_ cardData: CardData, isUpdate: Bool) {
+        
         DispatchQueue.main.async {
-            // 通过回调通知外部处理数据同步
-            self.onCardReceived?(cardData)
             self.logger.info("收到卡片同步: \(cardData.id)")
+            if self.onCardReceived != nil {
+                self.onCardReceived?(cardData)
+            } else {
+                print("❌ onCardReceived 回调为 nil！")
+            }
         }
     }
     
