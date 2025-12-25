@@ -20,44 +20,50 @@ struct HomeView_iOS: View {
     @State private var syncAlertMessage: String = ""
     
     var body: some View {
-        @Bindable var viewModel = viewModel
-        
         NavigationStack {
-            ZStack {
-                VStack {
-                    ReadingCardListView(
-                        searchText: viewModel.searchText,
-                        sortParameter: viewModel.sortParameter,
-                        sortOrder: viewModel.sortOrder
-                    )
-                        .searchable(text: $viewModel.searchText, prompt: "Search")
-                        .navigationTitle("MemoRead")
-                        .toolbar {
-                            toolbarItem()
-                        }
+            contentView
+                .background(ThemeStyle.listBackground)
+                .navigationTitle("MemoRead")
+                .toolbar { toolbarItem() }
+                .sheet(isPresented: $isSettingPresented) { SettingView() }
+                .sheet(isPresented: $isAddCardPresented) { addCardSheet }
+                .alert("同步提示", isPresented: $showSyncAlert) {
+                    Button("好的", role: .cancel) { }
+                } message: {
+                    Text(syncAlertMessage)
                 }
-                .sheet(isPresented: $isSettingPresented) {
-                    SettingView()
+                .onAppear {
+                    // 设置同步服务回调
+                    configureSyncService()
                 }
-                .sheet(isPresented: $isAddCardPresented) {
-                    AddCardView()
-                        .presentationDetents([.medium, .large])
-                }
-                AddButton(addAction: {
-                    isAddCardPresented = true
-                })
-            }
-            .alert("同步提示", isPresented: $showSyncAlert) {
-                Button("好的", role: .cancel) { }
-            } message: {
-                Text(syncAlertMessage)
-            }
-            .onAppear {
-                // 设置同步服务回调
-                MultipeerSyncService.shared.setupSyncHandlers(modelContext: modelContext)
-                configureSyncCallbacks()
-            }
         }
+        
+    }
+    
+    // MARK: - Content
+    private var contentView: some View {
+        ZStack {
+            ReadingCardListView(
+                searchText: viewModel.searchText,
+                sortParameter: viewModel.sortParameter,
+                sortOrder: viewModel.sortOrder
+            )
+            .searchable(text: searchTextBinding, prompt: "Search")
+            
+            AddButton(addAction: { isAddCardPresented = true })
+        }
+    }
+
+    private var searchTextBinding: Binding<String> {
+        Binding(
+            get: { viewModel.searchText },
+            set: { viewModel.searchText = $0 }
+        )
+    }
+    
+    private var addCardSheet: some View {
+        AddCardView()
+            .presentationDetents([.medium, .large])
     }
     
     @ToolbarContentBuilder
@@ -66,7 +72,7 @@ struct HomeView_iOS: View {
             settingsButton
         }
         ToolbarItem(placement: .navigationBarTrailing) {
-            SortButton( )
+            SortButton()
         }
     }
     
@@ -78,9 +84,14 @@ struct HomeView_iOS: View {
         }
     }
 
-    private func configureSyncCallbacks() {
+    // MARK: - Sync
+    private func configureSyncService() {
         let service = MultipeerSyncService.shared
-
+        service.setupSyncHandlers(modelContext: modelContext)
+        configureSyncCallbacks(service: service)
+    }
+    
+    private func configureSyncCallbacks(service: MultipeerSyncService) {
         service.onPeerConnected = { peer in
             DispatchQueue.main.async {
                 syncAlertMessage = "已连接 \(peer.displayName)，开始检查未同步数据"
@@ -89,7 +100,7 @@ struct HomeView_iOS: View {
                 service.syncPendingDeletions(modelContext: modelContext)
             }
         }
-
+        
         service.onSyncCompleted = { success, error in
             DispatchQueue.main.async {
                 if success {

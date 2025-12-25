@@ -21,9 +21,18 @@ struct TimelineCardView: View {
     @State private var isGeneratingSummary = false
     private let type: ReadingCardModel.ReadingCardType
     
+    // MARK: - UI State
     private var tagText: String {
         if let tag = item.extractedTag { return "#\(tag)" }
         return "#\(type.name)"
+    }
+    
+    private var statusIconName: String {
+        isSynced ? "checkmark.circle.fill" : "icloud.slash"
+    }
+    
+    private var statusIconColor: Color {
+        isSynced ? .green.opacity(0.8) : .orange.opacity(0.8)
     }
     
     // MARK: - Initialization
@@ -36,12 +45,20 @@ struct TimelineCardView: View {
     
     // MARK: - Body
     var body: some View {
-        HStack(alignment: .top, spacing: 16) {
+        ZStack(alignment: .topLeading) {
+            HStack(alignment: .top, spacing: 16) {
+                // 为时间线预留列宽，避免 HStack 的“未指定高度”导致时间线无法撑满高度
+                Spacer()
+                    .frame(width: 20)
+                
+                cardSection
+            }
+            
             timelineIndicator
-            cardSection
+                .frame(width: 20, alignment: .top)
         }
         .padding(.horizontal, 16)
-        .background(TimelineStyle.listBackground)
+        .background(ThemeStyle.listBackground)
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
                 handleDelete()
@@ -65,18 +82,23 @@ struct TimelineCardView: View {
     private var timelineIndicator: some View {
         VStack(spacing: 0) {
             Circle()
-                .fill(TimelineStyle.accent)
+                .fill(ThemeStyle.timelineAccent)
                 .frame(width: 15, height: 15)
                 .overlay(
                     Circle()
                         .stroke(Color.white, lineWidth: 2)
                 )
+                .padding(.top, 4)
+            
             if !isLast {
                 Rectangle()
-                    .fill(TimelineStyle.line)
+                    .fill(ThemeStyle.timelineLine)
                     .frame(width: 2)
+                
+                // 关键：在 ZStack 容器给出“确定高度”后，这里的 Spacer 才能撑满剩余高度
+                Spacer(minLength: 0)
             } else {
-                Spacer()
+                Spacer(minLength: 0)
             }
         }
     }
@@ -91,10 +113,10 @@ struct TimelineCardView: View {
                 footerView
             }
             .padding(16)
-            .background(TimelineStyle.cardBackground)
+            .background(ThemeStyle.cardBackground)
             .cornerRadius(20)
             .shadow(
-                color: TimelineStyle.cardShadow.opacity(0.12),
+                color: ThemeStyle.cardShadow.opacity(0.12),
                 radius: 10,
                 x: 0,
                 y: 4
@@ -114,22 +136,16 @@ struct TimelineCardView: View {
             
             HStack(spacing: 10) {
                 // 类型图标 (如果是链接或图片)
-                if type != ReadingCardModel.ReadingCardType.text {
+                if type != .text {
                     Image(systemName: type.icon)
                         .font(.system(size: 12))
                         .foregroundColor(.secondary.opacity(0.6))
                 }
                 
                 // 同步/完成状态
-                if isSynced {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(.green.opacity(0.8))
-                } else {
-                    Image(systemName: "clock")
-                        .font(.system(size: 14))
-                        .foregroundColor(.orange.opacity(0.8))
-                }
+                Image(systemName: statusIconName)
+                    .font(.system(size: 14))
+                    .foregroundColor(statusIconColor)
             }
         }
     }
@@ -219,31 +235,6 @@ struct TimelineCardView: View {
         } catch {
             print("Failed to delete card: \(error.localizedDescription)")
         }
-    }
-}
-
-// MARK: - Style & Layout
-private enum TimelineStyle {
-    static let accent = Color.blue
-    static let line = Color.blue.opacity(0.3)
-    static let cardShadow = Color.black
-    
-    static var cardBackground: Color {
-        #if os(iOS)
-        return Color(.secondarySystemGroupedBackground)
-        #elseif os(macOS)
-        return Color(.windowBackgroundColor)
-        #else
-        return .white
-        #endif
-    }
-    
-    static var listBackground: Color {
-        #if os(iOS)
-        return Color(.systemGroupedBackground)
-        #else
-        return Color.clear
-        #endif
     }
 }
 
