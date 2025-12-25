@@ -17,11 +17,6 @@ class ModelContainerService {
     
     private init() {
         modelContainer = createModelContainer()
-        if let container = modelContainer {
-            print("✅ ModelContainer 创建成功: \(ObjectIdentifier(container))")
-        } else {
-            print("❌ ModelContainer 创建失败")
-        }
     }
     
     // MARK: - Container Creation
@@ -36,13 +31,12 @@ class ModelContainerService {
         )
                 
         do {
-            let container = try ModelContainer(
+            return try ModelContainer(
                 for: schema,
                 configurations: [modelConfiguration]
             )
-            return container
         } catch {
-            print("❌ 创建 ModelContainer 失败: \(error)")
+            // 创建失败，返回 nil
             return nil
         }
     }

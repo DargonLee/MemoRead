@@ -28,7 +28,6 @@ extension MultipeerSyncService {
         
         do {
             let existing = try modelContext.fetch(descriptor)
-            print("📊 查询现有卡片: 找到 \(existing.count) 张")
             
             if let existingCard = existing.first {
                 existingCard.content = resolvedContent
@@ -41,7 +40,6 @@ extension MultipeerSyncService {
                 existingCard.lastSyncedAt = cardData.lastSyncedAt ?? Date()
             } else {
                 // 创建新卡片
-                print("➕ 创建新卡片: \(cardData.id)")
                 let newCard = ReadingCardModel(
                     id: cardData.id,
                     content: resolvedContent,
@@ -57,12 +55,9 @@ extension MultipeerSyncService {
             }
             
             try modelContext.save()
-            // 验证保存结果
-            let allCards = try modelContext.fetch(FetchDescriptor<ReadingCardModel>())
-            logger.info("成功同步卡片到数据库: \(cardData.id)")
+            logger.info("成功同步卡片: \(cardData.id)")
             onSyncCompleted?(true, nil)
         } catch {
-            print("❌ 保存失败: \(error.localizedDescription)")
             logger.error("保存同步数据失败: \(error.localizedDescription)")
             onSyncCompleted?(false, error.localizedDescription)
         }

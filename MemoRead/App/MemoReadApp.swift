@@ -38,8 +38,6 @@ struct MemoReadApp: App {
         if let container = ModelContainerService.shared.modelContainer {
             let context = container.mainContext
             MultipeerSyncService.shared.setupSyncHandlers(modelContext: context)
-        } else {
-            print("❌ App Init: ModelContainer 为 nil，无法设置同步处理器")
         }
     }
 
@@ -50,20 +48,13 @@ struct MemoReadApp: App {
                 .preferredColorScheme(selectedAppearance.colorScheme)
                 .environment(viewModel)
         }
-        .modelContainer({
-            if let container = ModelContainerService.shared.modelContainer {
-                print("📱 iOS Scene: 使用 ModelContainerService 的容器: \(ObjectIdentifier(container))")
-                return container
-            } else {
-                print("⚠️ iOS Scene: ModelContainerService 容器为 nil，创建默认容器")
-                return try! ModelContainer(for: ReadingCardModel.self)
-            }
+        .modelContainer(ModelContainerService.shared.modelContainer ?? {
+            return try! ModelContainer(for: ReadingCardModel.self)
         }())
         #elseif os(macOS)
         // macOS 使用菜单栏模式
         MenuBarExtra {
             if let container = ModelContainerService.shared.modelContainer {
-               let _ = print("💻 macOS Scene: 使用 ModelContainerService 的容器: \(ObjectIdentifier(container))")
                 MenuBarContentView()
                     .preferredColorScheme(selectedAppearance.colorScheme)
                     .environment(viewModel)
