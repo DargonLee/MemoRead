@@ -7,6 +7,9 @@
 
 import SwiftUI
 import SwiftData
+#if os(iOS)
+import UIKit
+#endif
 
 struct TimelineCardView: View {
     @Environment(\.modelContext) private var modelContext
@@ -16,7 +19,12 @@ struct TimelineCardView: View {
     @State private var showSummarySheet = false
     @State private var summaryText: String = ""
     @State private var isGeneratingSummary = false
-    private var type: ReadingCardModel.ReadingCardType
+    private let type: ReadingCardModel.ReadingCardType
+    
+    private var tagText: String {
+        if let tag = item.extractedTag { return "#\(tag)" }
+        return "#\(type.name)"
+    }
     
     // MARK: - Initialization
     init(item: ReadingCardModel, isLast: Bool = false) {
@@ -29,30 +37,13 @@ struct TimelineCardView: View {
     // MARK: - Body
     var body: some View {
         HStack(alignment: .top, spacing: TimelineLayout.horizontalSpacing) {
-            // 左侧时间线
             timelineIndicator
-            
-            // 右侧内容区域
-            VStack(alignment: .leading, spacing: 8) {
-                // 1. 顶部：时间戳 + 状态图标
-                headerView
-                
-                // 2. 白色卡片区域
-                VStack(alignment: .leading, spacing: 16) {
-                    ReadingCardContentView(item: item)
-                    
-                    // 3. 底部：标签 + 操作按钮
-                    footerView
-                }
-                .padding(16)
-                .background(TimelineStyle.cardBackground)
-                .cornerRadius(20)
-                .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
-            }
+            cardSection
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(TimelineStyle.listBackground)
+        .padding(.horizontal, TimelineLayout.listHorizontalPadding)
+        .padding(.vertical, TimelineLayout.listVerticalPadding)
+//        .background(TimelineStyle.listBackground)
+        .randomBackground()
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
                 handleDelete()
@@ -94,6 +85,27 @@ struct TimelineCardView: View {
             }
         }
     }
+
+    // MARK: - Card Section
+    private var cardSection: some View {
+        VStack(alignment: .leading, spacing: TimelineLayout.sectionSpacing) {
+            headerView
+            
+            VStack(alignment: .leading, spacing: TimelineLayout.cardContentSpacing) {
+                ReadingCardContentView(item: item)
+                footerView
+            }
+            .padding(TimelineLayout.cardPadding)
+            .background(TimelineStyle.cardBackground)
+            .cornerRadius(TimelineLayout.cardCornerRadius)
+            .shadow(
+                color: TimelineStyle.cardShadow.opacity(0.12),
+                radius: TimelineLayout.cardShadowRadius,
+                x: 0,
+                y: TimelineLayout.cardShadowYOffset
+            )
+        }
+    }
     
     // MARK: - Header View
     private var headerView: some View {
@@ -130,39 +142,22 @@ struct TimelineCardView: View {
     // MARK: - Footer View
     private var footerView: some View {
         HStack(alignment: .center) {
-            // 标签
-            HStack(spacing: 8) {
-                if let tag = item.extractedTag {
-                    Text("#\(tag)")
-                        .font(.system(size: 13))
-                        .foregroundColor(.secondary.opacity(0.7))
-                } else {
-                    Text("#\(type.name)")
-                        .font(.system(size: 13))
-                        .foregroundColor(.secondary.opacity(0.7))
-                }
-            }
+            Text(tagText)
+                .font(.system(size: 13))
+                .foregroundColor(.secondary.opacity(0.7))
             
             Spacer()
             
             // 操作按钮
-            HStack(spacing: 20) {
+            HStack(spacing: 18) {
                 AISummaryButton(action: handleAISummary)
                 
-                Button(action: {
+                IconButton(systemName: "doc.on.doc") {
                     item.content.copyToClipboard()
-                }) {
-                    Image(systemName: "doc.on.doc")
-                        .font(.system(size: 16))
-                        .foregroundColor(.secondary.opacity(0.6))
                 }
                 
-                Button(action: {
+                IconButton(systemName: "square.and.arrow.up") {
                     handleShare()
-                }) {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 16))
-                        .foregroundColor(.secondary.opacity(0.6))
                 }
             }
         }
@@ -170,11 +165,13 @@ struct TimelineCardView: View {
     
     // MARK: - Actions
     private func handleShare() {
-        // 分享逻辑
         #if os(iOS)
-        let activityVC = UIActivityViewController(activityItems: [item.content], applicationActivities: nil)
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let rootVC = windowScene.windows.first?.rootViewController {
+        let activityVC = UIActivityViewController(
+            activityItems: [item.content],
+            applicationActivities: nil
+        )
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootVC = scene.windows.first?.rootViewController {
             rootVC.present(activityVC, animated: true)
         }
         #endif
@@ -234,6 +231,7 @@ struct TimelineCardView: View {
 private enum TimelineStyle {
     static let accent = Color.blue
     static let line = Color.blue.opacity(0.3)
+    static let cardShadow = Color.black
     
     static var cardBackground: Color {
         #if os(iOS)
@@ -256,123 +254,17 @@ private enum TimelineStyle {
 
 private enum TimelineLayout {
     static let horizontalSpacing: CGFloat = 16
+    static let sectionSpacing: CGFloat = 8
+    static let cardContentSpacing: CGFloat = 16
+    static let cardPadding: CGFloat = 16
+    static let cardCornerRadius: CGFloat = 20
+    static let cardShadowRadius: CGFloat = 10
+    static let cardShadowYOffset: CGFloat = 4
+    static let listHorizontalPadding: CGFloat = 16
+    static let listVerticalPadding: CGFloat = 10
     static let dotSize: CGFloat = 12
     static let lineWidth: CGFloat = 2
-}
-
-// MARK: - AI Summary Button
-private struct AISummaryButton: View {
-    let action: () -> Void
-    @State private var isProcessing = false
-    
-    var body: some View {
-        Button(action: {
-            isProcessing = true
-            action()
-            // 模拟处理完成后重置状态
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                isProcessing = false
-            }
-        }) {
-            Group {
-                if isProcessing {
-                    ProgressView()
-                        .scaleEffect(0.8)
-                } else {
-                    Image(systemName: "sparkles")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
-        .disabled(isProcessing)
-    }
-}
-
-// MARK: - Summary Sheet View
-private struct SummarySheetView: View {
-    let content: String
-    @Binding var summary: String
-    @Binding var isGenerating: Bool
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: 16) {
-                // 原文
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("原文")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    ScrollView {
-                        Text(content)
-                            .font(.body)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .frame(maxHeight: 200)
-                    .padding(12)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
-                }
-                
-                // AI总结
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("AI总结")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        
-                        if isGenerating {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                        }
-                    }
-                    
-                    if isGenerating {
-                        HStack {
-                            Spacer()
-                            ProgressView()
-                            Spacer()
-                        }
-                        .frame(height: 100)
-                    } else {
-                        ScrollView {
-                            Text(summary.isEmpty ? "点击生成总结" : summary)
-                                .font(.body)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .frame(maxHeight: 200)
-                        .padding(12)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(8)
-                    }
-                }
-                
-                Spacer()
-            }
-            .padding()
-            .navigationTitle("AI总结")
-#if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-#endif
-            .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") {
-                        dismiss()
-                    }
-                }
-#elseif os(macOS)
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("完成") {
-                        dismiss()
-                    }
-                }
-#endif
-            }
-        }
-    }
+    static let timelineColumnWidth: CGFloat = 20
 }
 
 #Preview {
