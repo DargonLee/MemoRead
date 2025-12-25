@@ -80,7 +80,7 @@ open MemoRead.xcodeproj
 - [ ] https://memo.vaaat.com/
 - [ ] Mac版本的App可以从右侧呼出
 - [ ] 列表形式参考 `screenshot.png`
-- [ ] 使用`MultipeerConnectivity`来完成近场通信
+- [x] 使用`MultipeerConnectivity`来完成近场通信
 
 
 

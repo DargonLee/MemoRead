@@ -16,6 +16,8 @@ struct HomeView_iOS: View {
     // MARK: - State
     @State private var isSettingPresented: Bool = false
     @State private var isAddCardPresented: Bool = false
+    @State private var showSyncAlert: Bool = false
+    @State private var syncAlertMessage: String = ""
     
     var body: some View {
         @Bindable var viewModel = viewModel
@@ -45,9 +47,15 @@ struct HomeView_iOS: View {
                     isAddCardPresented = true
                 })
             }
+            .alert("同步提示", isPresented: $showSyncAlert) {
+                Button("好的", role: .cancel) { }
+            } message: {
+                Text(syncAlertMessage)
+            }
             .onAppear {
                 // 设置同步服务回调
                 MultipeerSyncService.shared.setupSyncHandlers(modelContext: modelContext)
+                configureSyncCallbacks()
             }
         }
     }
@@ -67,6 +75,30 @@ struct HomeView_iOS: View {
             isSettingPresented.toggle()
         }) {
             Image(systemName: "gearshape")
+        }
+    }
+
+    private func configureSyncCallbacks() {
+        let service = MultipeerSyncService.shared
+
+        service.onPeerConnected = { peer in
+            DispatchQueue.main.async {
+                syncAlertMessage = "已连接 \(peer.displayName)，开始检查未同步数据"
+                showSyncAlert = true
+                service.syncPendingCards(modelContext: modelContext)
+            }
+        }
+
+        service.onSyncCompleted = { success, error in
+            DispatchQueue.main.async {
+                if success {
+                    syncAlertMessage = "同步完成"
+                    showSyncAlert = true
+                } else if let error {
+                    syncAlertMessage = "同步失败：\(error)"
+                    showSyncAlert = true
+                }
+            }
         }
     }
 }

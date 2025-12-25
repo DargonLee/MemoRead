@@ -19,6 +19,8 @@ extension MultipeerSyncService {
     }
     
     private func handleReceivedCard(_ cardData: CardData, in modelContext: ModelContext) {
+        let resolvedContent = cardData.imageDataBase64 ?? cardData.content
+
         // 检查是否已存在
         let descriptor = FetchDescriptor<ReadingCardModel>(
             predicate: #Predicate { $0.id == cardData.id }
@@ -27,23 +29,27 @@ extension MultipeerSyncService {
         do {
             if let existingCard = try modelContext.fetch(descriptor).first {
                 // 更新现有卡片
-                existingCard.content = cardData.content
+                existingCard.content = resolvedContent
                 existingCard.type = cardData.type
                 existingCard.createdAt = cardData.createdAt
                 existingCard.reminderAt = cardData.reminderAt
                 existingCard.completedAt = cardData.completedAt
                 existingCard.isCompleted = cardData.isCompleted
+                existingCard.isSynced = true
+                existingCard.lastSyncedAt = cardData.lastSyncedAt ?? Date()
             } else {
                 // 创建新卡片
                 let newCard = ReadingCardModel(
                     id: cardData.id,
-                    content: cardData.content,
+                    content: resolvedContent,
                     createdAt: cardData.createdAt,
                     reminderAt: cardData.reminderAt ?? Date.distantPast
                 )
                 newCard.type = cardData.type
                 newCard.completedAt = cardData.completedAt
                 newCard.isCompleted = cardData.isCompleted
+                newCard.isSynced = true
+                newCard.lastSyncedAt = cardData.lastSyncedAt ?? Date()
                 modelContext.insert(newCard)
             }
             
@@ -69,6 +75,22 @@ extension MultipeerSyncService {
             }
         } catch {
             logger.error("删除卡片失败: \(error.localizedDescription)")
+        }
+    }
+
+    // MARK: - Bulk Sync Helpers
+    func syncPendingCards(modelContext: ModelContext) {
+        let descriptor = FetchDescriptor<ReadingCardModel>(
+            predicate: #Predicate { $0.isSynced == false }
+        )
+
+        do {
+            let pending = try modelContext.fetch(descriptor)
+            pending.forEach { card in
+                MultipeerSyncService.shared.syncCardToPeers(card, modelContext: modelContext)
+            }
+        } catch {
+            logger.error("拉取未同步数据失败: \(error.localizedDescription)")
         }
     }
 }

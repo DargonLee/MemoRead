@@ -6,5 +6,12 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>我们需要使用本地网络来发现并连接周围的设备以进行同步。</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_memoread-sync._tcp</string>
+		<string>_memoread-sync._udp</string>
+	</array>
 </dict>
 </plist>

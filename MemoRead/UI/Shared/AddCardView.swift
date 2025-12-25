@@ -386,7 +386,7 @@ struct AddCardView: View {
         
         // 同步到其他设备
         #if os(iOS)
-        MultipeerSyncService.shared.syncCardToPeers(card)
+        MultipeerSyncService.shared.syncCardToPeers(card, modelContext: contxt)
         #endif
     }
     

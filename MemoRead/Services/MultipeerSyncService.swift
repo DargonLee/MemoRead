@@ -39,6 +39,51 @@ struct CardData: Codable {
     let reminderAt: Date?
     let completedAt: Date?
     let isCompleted: Bool
+    let imageDataBase64: String?
+    let isSynced: Bool
+    let lastSyncedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id, content, type, createdAt, reminderAt, completedAt, isCompleted, imageDataBase64, isSynced, lastSyncedAt
+    }
+
+    init(
+        id: UUID,
+        content: String,
+        type: Int,
+        createdAt: Date,
+        reminderAt: Date?,
+        completedAt: Date?,
+        isCompleted: Bool,
+        imageDataBase64: String? = nil,
+        isSynced: Bool = true,
+        lastSyncedAt: Date? = nil
+    ) {
+        self.id = id
+        self.content = content
+        self.type = type
+        self.createdAt = createdAt
+        self.reminderAt = reminderAt
+        self.completedAt = completedAt
+        self.isCompleted = isCompleted
+        self.imageDataBase64 = imageDataBase64
+        self.isSynced = isSynced
+        self.lastSyncedAt = lastSyncedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        content = try container.decode(String.self, forKey: .content)
+        type = try container.decode(Int.self, forKey: .type)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        reminderAt = try container.decodeIfPresent(Date.self, forKey: .reminderAt)
+        completedAt = try container.decodeIfPresent(Date.self, forKey: .completedAt)
+        isCompleted = try container.decodeIfPresent(Bool.self, forKey: .isCompleted) ?? false
+        imageDataBase64 = try container.decodeIfPresent(String.self, forKey: .imageDataBase64)
+        isSynced = try container.decodeIfPresent(Bool.self, forKey: .isSynced) ?? true
+        lastSyncedAt = try container.decodeIfPresent(Date.self, forKey: .lastSyncedAt)
+    }
 }
 
 // MARK: - Multipeer Sync Service
@@ -51,11 +96,14 @@ class MultipeerSyncService: NSObject {
     private var session: MCSession?
     private var serviceAdvertiser: MCNearbyServiceAdvertiser?
     private var serviceBrowser: MCNearbyServiceBrowser?
+    private var invitingPeers: Set<MCPeerID> = []
+    private var isResettingSession = false
     
     // MARK: - Callbacks
     var onConnectedDevicesChanged: (([String]) -> Void)?
     var onSyncCompleted: ((Bool, String?) -> Void)?
     var onCardReceived: ((CardData) -> Void)?
+    var onPeerConnected: ((MCPeerID) -> Void)?
     
     private var connectedPeers: Set<MCPeerID> = [] {
         didSet {
@@ -86,8 +134,54 @@ class MultipeerSyncService: NSObject {
     
     // MARK: - Setup
     private func setupSession() {
-        session = MCSession(peer: myPeerId, securityIdentity: nil, encryptionPreference: .required)
+        session = MCSession(peer: myPeerId, securityIdentity: nil, encryptionPreference: .optional)
         session?.delegate = self
+    }
+
+    private func makeCardData(from card: ReadingCardModel) -> CardData {
+        let imageBase64 = card.type == ReadingCardModel.ReadingCardType.image.rawValue ? card.content : nil
+        return CardData(
+            id: card.id,
+            content: card.content,
+            type: card.type,
+            createdAt: card.createdAt,
+            reminderAt: card.reminderAt,
+            completedAt: card.completedAt,
+            isCompleted: card.isCompleted,
+            imageDataBase64: imageBase64,
+            isSynced: true,
+            lastSyncedAt: Date()
+        )
+    }
+
+    private func ensureSession() -> MCSession {
+        if let session {
+            return session
+        }
+        setupSession()
+        return session!
+    }
+
+    private func resetSessionIfNeeded() {
+        // 避免同时触发多个重建
+        guard !isResettingSession else { return }
+        isResettingSession = true
+
+        // 断开并重建新的 session，防止握手卡死
+        session?.disconnect()
+        setupSession()
+
+        invitingPeers.removeAll()
+        connectedPeers.removeAll()
+
+        // 继续保持广播/浏览
+        #if os(iOS)
+        startBrowsing()
+        #elseif os(macOS)
+        startAdvertising()
+        #endif
+
+        isResettingSession = false
     }
     
     // MARK: - Service Control
@@ -142,24 +236,20 @@ class MultipeerSyncService: NSObject {
         stopAdvertising()
         stopBrowsing()
         session?.disconnect()
+        session = nil
+        invitingPeers.removeAll()
+        connectedPeers.removeAll()
     }
     
     // MARK: - Data Sync
-    func syncCard(_ card: ReadingCardModel, type: SyncMessage.MessageType) {
-        guard let session = session, !connectedPeers.isEmpty else {
+    @discardableResult
+    func syncCard(_ card: ReadingCardModel, type: SyncMessage.MessageType) -> Bool {
+        guard session != nil, !connectedPeers.isEmpty else {
             logger.warning("没有连接的设备，无法同步")
-            return
+            return false
         }
         
-        let cardData = CardData(
-            id: card.id,
-            content: card.content,
-            type: card.type,
-            createdAt: card.createdAt,
-            reminderAt: card.reminderAt,
-            completedAt: card.completedAt,
-            isCompleted: card.isCompleted
-        )
+        let cardData = makeCardData(from: card)
         
         let message = SyncMessage(
             type: type,
@@ -167,22 +257,26 @@ class MultipeerSyncService: NSObject {
             timestamp: Date()
         )
         
-        sendMessage(message)
+        return sendMessage(message)
     }
     
-    private func sendMessage(_ message: SyncMessage) {
+    @discardableResult
+    private func sendMessage(_ message: SyncMessage) -> Bool {
         guard let session = session,
               let data = try? JSONEncoder().encode(message) else {
             logger.error("编码消息失败")
-            return
+            return false
         }
         
         do {
             try session.send(data, toPeers: Array(connectedPeers), with: .reliable)
             logger.info("成功发送消息: \(message.type.rawValue)")
+            onSyncCompleted?(true, nil)
+            return true
         } catch {
             logger.error("发送消息失败: \(error.localizedDescription)")
             onSyncCompleted?(false, error.localizedDescription)
+            return false
         }
     }
     
@@ -210,6 +304,8 @@ class MultipeerSyncService: NSObject {
             // 处理同步响应
             break
         }
+
+        onSyncCompleted?(true, nil)
     }
     
     private func handleCardSync(_ cardData: CardData, isUpdate: Bool) {
@@ -244,12 +340,14 @@ class MultipeerSyncService: NSObject {
     }
     
     // MARK: - Helper Methods
-    func syncCardToPeers(_ card: ReadingCardModel) {
-        syncCard(card, type: .cardCreated)
+    func syncCardToPeers(_ card: ReadingCardModel, modelContext: ModelContext? = nil) {
+        let success = syncCard(card, type: .cardCreated)
+        updateSyncState(for: card, success: success, modelContext: modelContext)
     }
     
-    func syncCardUpdate(_ card: ReadingCardModel) {
-        syncCard(card, type: .cardUpdated)
+    func syncCardUpdate(_ card: ReadingCardModel, modelContext: ModelContext? = nil) {
+        let success = syncCard(card, type: .cardUpdated)
+        updateSyncState(for: card, success: success, modelContext: modelContext)
     }
     
     func syncCardDeletion(_ cardId: UUID) {
@@ -261,7 +359,10 @@ class MultipeerSyncService: NSObject {
             createdAt: Date(),
             reminderAt: nil,
             completedAt: nil,
-            isCompleted: false
+            isCompleted: false,
+            imageDataBase64: nil,
+            isSynced: true,
+            lastSyncedAt: Date()
         )
         
         let message = SyncMessage(
@@ -272,6 +373,18 @@ class MultipeerSyncService: NSObject {
         
         sendMessage(message)
     }
+
+    // MARK: - Sync State Helpers
+    private func updateSyncState(for card: ReadingCardModel, success: Bool, modelContext: ModelContext?) {
+        guard let modelContext else { return }
+        card.isSynced = success
+        card.lastSyncedAt = success ? Date() : card.lastSyncedAt
+        do {
+            try modelContext.save()
+        } catch {
+            logger.error("保存同步状态失败: \(error.localizedDescription)")
+        }
+    }
 }
 
 // MARK: - MCSessionDelegate
@@ -280,13 +393,21 @@ extension MultipeerSyncService: MCSessionDelegate {
         DispatchQueue.main.async {
             switch state {
             case .connected:
+                self.invitingPeers.remove(peerID)
                 self.connectedPeers.insert(peerID)
                 self.logger.info("设备已连接: \(peerID.displayName)")
+                self.onPeerConnected?(peerID)
             case .connecting:
                 self.logger.info("正在连接: \(peerID.displayName)")
             case .notConnected:
+                self.invitingPeers.remove(peerID)
                 self.connectedPeers.remove(peerID)
                 self.logger.info("设备已断开: \(peerID.displayName)")
+                // 如果所有连接都断开，重建 session 以清除异常状态
+                if self.connectedPeers.isEmpty && self.session?.connectedPeers.isEmpty ?? true {
+                    self.logger.info("重建会话以恢复连接能力")
+                    self.resetSessionIfNeeded()
+                }
             @unknown default:
                 break
             }
@@ -315,7 +436,7 @@ extension MultipeerSyncService: MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
         logger.info("收到连接邀请 from \(peerID.displayName)")
         // 自动接受邀请
-        invitationHandler(true, session)
+        invitationHandler(true, ensureSession())
     }
     
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
@@ -327,8 +448,15 @@ extension MultipeerSyncService: MCNearbyServiceAdvertiserDelegate {
 extension MultipeerSyncService: MCNearbyServiceBrowserDelegate {
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
         logger.info("发现设备: \(peerID.displayName)")
-        // 自动发送连接邀请
-        browser.invitePeer(peerID, to: session!, withContext: nil, timeout: 10)
+        
+        // 避免重复邀请或邀请已连接的设备
+        guard !invitingPeers.contains(peerID) && !connectedPeers.contains(peerID) else {
+            return
+        }
+        
+        invitingPeers.insert(peerID)
+        logger.info("发送连接邀请 to \(peerID.displayName)")
+        browser.invitePeer(peerID, to: ensureSession(), withContext: nil, timeout: 10)
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {

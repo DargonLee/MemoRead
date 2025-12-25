@@ -29,6 +29,8 @@ final class ReadingCardModel {
 
     // 状态
     var isCompleted: Bool = false
+    var isSynced: Bool = false
+    var lastSyncedAt: Date?
 
     init(
         id: UUID = UUID(),
@@ -42,6 +44,8 @@ final class ReadingCardModel {
         self.createdAt = createdAt
         self.reminderAt = reminderAt
         self.isCompleted = false
+        self.isSynced = false
+        self.lastSyncedAt = nil
     }
     
     private static func determineType(for content: String) -> ReadingCardType.RawValue {
@@ -202,6 +206,12 @@ extension ReadingCardModel {
                 createdAt: .now.addingTimeInterval(-7200)),  // 2小时前
         ]
 
+        // 标记示例数据为已同步
+        samples.indices.forEach { index in
+            samples[index].isSynced = true
+            samples[index].lastSyncedAt = Date()
+        }
+
         // 创建示例图片卡片
         let image: PlatformImage? = {
             #if os(iOS)
@@ -217,6 +227,10 @@ extension ReadingCardModel {
             return samples
         }
         samples.append(imageModel)
+        samples.indices.forEach { index in
+            samples[index].isSynced = true
+            samples[index].lastSyncedAt = Date()
+        }
         return samples
     }
 }

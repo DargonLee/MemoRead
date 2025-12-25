@@ -12,6 +12,7 @@ struct TimelineCardView: View {
     let item: ReadingCardModel
     let isLast: Bool
     @State private var isCompleted: Bool
+    @State private var isSynced: Bool
     @State private var showSummarySheet = false
     @State private var summaryText: String = ""
     @State private var isGeneratingSummary = false
@@ -28,6 +29,7 @@ struct TimelineCardView: View {
         self.item = item
         self.isLast = isLast
         _isCompleted = State(initialValue: item.isCompleted)
+        _isSynced = State(initialValue: item.isSynced)
         self.type = ReadingCardModel.ReadingCardType(rawValue: item.type)!
     }
     
@@ -61,6 +63,9 @@ struct TimelineCardView: View {
                 isGenerating: $isGeneratingSummary
             )
         }
+        .onChange(of: item.isSynced) { _, newValue in
+            isSynced = newValue
+        }
     }
     
     // MARK: - Timeline Indicator
@@ -81,6 +86,8 @@ struct TimelineCardView: View {
                 .foregroundColor(.primary)
             
             TagView(tag: cardTag)
+
+            SyncStatusBadge(isSynced: isSynced, lastSyncedAt: item.lastSyncedAt)
             
             Spacer()
         }
@@ -182,6 +189,35 @@ private struct CompleteButton: View {
             .frame(width: ButtonLayout.minimumSize, height: ButtonLayout.minimumSize)
         }
         .disabled(isCompleted)
+    }
+}
+
+// MARK: - Sync Status Badge
+private struct SyncStatusBadge: View {
+    let isSynced: Bool
+    let lastSyncedAt: Date?
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: isSynced ? "checkmark.seal.fill" : "icloud.slash")
+                .font(.caption)
+                .foregroundColor(isSynced ? .green : .orange)
+
+            Text(statusText)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(isSynced ? Color.green.opacity(0.12) : Color.orange.opacity(0.12))
+        .cornerRadius(8)
+    }
+
+    private var statusText: String {
+        if isSynced, let lastSyncedAt {
+            return "已同步 · \(lastSyncedAt.timeAgoDisplay())"
+        }
+        return "待同步"
     }
 }
 
