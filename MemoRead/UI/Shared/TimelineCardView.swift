@@ -36,14 +36,12 @@ struct TimelineCardView: View {
     
     // MARK: - Body
     var body: some View {
-        HStack(alignment: .top, spacing: TimelineLayout.horizontalSpacing) {
+        HStack(alignment: .top, spacing: 16) {
             timelineIndicator
             cardSection
         }
-        .padding(.horizontal, TimelineLayout.listHorizontalPadding)
-        .padding(.vertical, TimelineLayout.listVerticalPadding)
-//        .background(TimelineStyle.listBackground)
-        .randomBackground()
+        .padding(.horizontal, 16)
+        .background(TimelineStyle.listBackground)
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
                 handleDelete()
@@ -68,18 +66,15 @@ struct TimelineCardView: View {
         VStack(spacing: 0) {
             Circle()
                 .fill(TimelineStyle.accent)
-                .frame(width: TimelineLayout.dotSize, height: TimelineLayout.dotSize)
+                .frame(width: 15, height: 15)
                 .overlay(
                     Circle()
                         .stroke(Color.white, lineWidth: 2)
                 )
-                .padding(.top, 4) // 对齐时间文本
-            
             if !isLast {
                 Rectangle()
                     .fill(TimelineStyle.line)
-                    .frame(width: TimelineLayout.lineWidth)
-                    .padding(.vertical, 4)
+                    .frame(width: 2)
             } else {
                 Spacer()
             }
@@ -88,23 +83,24 @@ struct TimelineCardView: View {
 
     // MARK: - Card Section
     private var cardSection: some View {
-        VStack(alignment: .leading, spacing: TimelineLayout.sectionSpacing) {
+        VStack(alignment: .leading, spacing: 8) {
             headerView
             
-            VStack(alignment: .leading, spacing: TimelineLayout.cardContentSpacing) {
+            VStack(alignment: .leading, spacing: 16) {
                 ReadingCardContentView(item: item)
                 footerView
             }
-            .padding(TimelineLayout.cardPadding)
+            .padding(16)
             .background(TimelineStyle.cardBackground)
-            .cornerRadius(TimelineLayout.cardCornerRadius)
+            .cornerRadius(20)
             .shadow(
                 color: TimelineStyle.cardShadow.opacity(0.12),
-                radius: TimelineLayout.cardShadowRadius,
+                radius: 10,
                 x: 0,
-                y: TimelineLayout.cardShadowYOffset
+                y: 4
             )
         }
+        .padding(.vertical, 8)
     }
     
     // MARK: - Header View
@@ -136,7 +132,6 @@ struct TimelineCardView: View {
                 }
             }
         }
-        .padding(.trailing, 4)
     }
     
     // MARK: - Footer View
@@ -252,28 +247,11 @@ private enum TimelineStyle {
     }
 }
 
-private enum TimelineLayout {
-    static let horizontalSpacing: CGFloat = 16
-    static let sectionSpacing: CGFloat = 8
-    static let cardContentSpacing: CGFloat = 16
-    static let cardPadding: CGFloat = 16
-    static let cardCornerRadius: CGFloat = 20
-    static let cardShadowRadius: CGFloat = 10
-    static let cardShadowYOffset: CGFloat = 4
-    static let listHorizontalPadding: CGFloat = 16
-    static let listVerticalPadding: CGFloat = 10
-    static let dotSize: CGFloat = 12
-    static let lineWidth: CGFloat = 2
-    static let timelineColumnWidth: CGFloat = 20
-}
-
 #Preview {
     VStack(spacing: 0) {
         TimelineCardView(item: ReadingCardModel.sampleCards()[0], isLast: false)
         TimelineCardView(item: ReadingCardModel.sampleCards()[1], isLast: false)
         TimelineCardView(item: ReadingCardModel.sampleCards()[2], isLast: true)
     }
-    .padding()
-    .background(Color(white: 0.95))
 }
 
