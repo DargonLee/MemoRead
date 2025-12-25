@@ -16,8 +16,6 @@ struct HomeView_iOS: View {
     // MARK: - State
     @State private var isSettingPresented: Bool = false
     @State private var isAddCardPresented: Bool = false
-    @State private var showSyncAlert: Bool = false
-    @State private var syncAlertMessage: String = ""
     
     var body: some View {
         NavigationStack {
@@ -27,11 +25,7 @@ struct HomeView_iOS: View {
                 .toolbar { toolbarItem() }
                 .sheet(isPresented: $isSettingPresented) { SettingView() }
                 .sheet(isPresented: $isAddCardPresented) { addCardSheet }
-                .alert("同步提示", isPresented: $showSyncAlert) {
-                    Button("好的", role: .cancel) { }
-                } message: {
-                    Text(syncAlertMessage)
-                }
+                .toast()
                 .onAppear {
                     // 仅设置 UI 相关的回调（如弹窗提示）
                     configureSyncCallbacks()
@@ -88,10 +82,9 @@ struct HomeView_iOS: View {
     private func configureSyncCallbacks() {
         let service = MultipeerSyncService.shared
         
-        service.onPeerConnected = { peer in
+        service.onPeerConnected = { [modelContext] peer in
             DispatchQueue.main.async {
-                syncAlertMessage = "已连接 \(peer.displayName)，开始检查未同步数据"
-                showSyncAlert = true
+                ToastManager.shared.show("已连接 \(peer.displayName)", style: .success)
                 service.syncPendingCards(modelContext: modelContext)
                 service.syncPendingDeletions(modelContext: modelContext)
             }
@@ -100,11 +93,9 @@ struct HomeView_iOS: View {
         service.onSyncCompleted = { success, error in
             DispatchQueue.main.async {
                 if success {
-                    syncAlertMessage = "同步完成"
-                    showSyncAlert = true
+                    ToastManager.shared.show("同步完成", style: .success)
                 } else if let error {
-                    syncAlertMessage = "同步失败：\(error)"
-                    showSyncAlert = true
+                    ToastManager.shared.show("同步失败：\(error)", style: .error)
                 }
             }
         }
