@@ -10,15 +10,15 @@ MemoRead 是一款精心打造的阅读笔记应用，完美支持 iOS 和 macOS
 
 <table>
   <tr>
-    <td align="center"><img src="README.assets/Memo_iOS.png" alt="iOS Light Mode"/><br/><sub><b>iOS 浅色模式</b></sub></td>
-    <td align="center"><img src="README.assets/Memo_iOS_Dark.png" alt="iOS Dark Mode"/><br/><sub><b>iOS 深色模式</b></sub></td>
+    <td align="center"><img src="images/iOS-Page.png" alt="iOS Light Mode"/><br/><sub><b>iOS 浅色模式</b></sub></td>
   </tr>
 </table>
 
 <p align="center">
-  <img src="README.assets/Memo_macOS.png" alt="macOS Mode"/><br/>
+  <img src="images/Memo_mac.png" alt="macOS Mode"/><br/>
   <sub><b>macOS 菜单栏应用</b></sub>
 </p>
+
 
 ## ✨ 特色功能
 
