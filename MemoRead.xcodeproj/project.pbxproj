@@ -15,6 +15,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				LaunchScreen.storyboard,
 			);
 			target = 18E5D2182D1ADAC9003664EC /* MemoRead */;
 		};
